@@ -1,0 +1,140 @@
+{
+    "variables": {
+      "system.debug": { "value": "false", "allowOverride": true }
+    },
+    "triggers": [
+      {
+        "branchFilters": [
+          "+refs/heads/main",
+          "+refs/heads/master"
+        ],
+        "pathFilters": [],
+        "batchChanges": true,
+        "maxConcurrentBuildsPerBranch": 1,
+        "pollingInterval": 0,
+        "triggerType": "continuousIntegration"
+      }
+    ],
+    "jobAuthorizationScope": "project",
+    "jobTimeoutInMinutes": 60,
+    "jobCancelTimeoutInMinutes": 5,
+    "process": {
+      "phases": [
+        {
+          "steps": [
+            {
+              "environment": {},
+              "enabled": true,
+              "continueOnError": false,
+              "alwaysRun": false,
+              "displayName": "Initialize CodeQL",
+              "timeoutInMinutes": 0,
+              "retryCountOnTaskFailure": 0,
+              "condition": "succeeded()",
+              "task": {
+                "id": "a34f8529-3300-494f-a460-963e3f5f6928",
+                "versionSpec": "1.*",
+                "definitionType": "task"
+              },
+              "inputs": {
+                "languages": "javascript"
+              }
+            },
+            {
+              "environment": {},
+              "enabled": true,
+              "continueOnError": false,
+              "alwaysRun": false,
+              "displayName": "Dependency Scanning",
+              "timeoutInMinutes": 0,
+              "retryCountOnTaskFailure": 0,
+              "condition": "succeeded()",
+              "task": {
+                "id": "f97aace4-962a-441b-9141-b842d806b9c7",
+                "versionSpec": "1.*",
+                "definitionType": "task"
+              },
+              "inputs": {}
+            },
+            {
+              "environment": {},
+              "enabled": true,
+              "continueOnError": false,
+              "alwaysRun": false,
+              "displayName": "Perform CodeQL analysis",
+              "timeoutInMinutes": 0,
+              "retryCountOnTaskFailure": 0,
+              "condition": "succeeded()",
+              "task": {
+                "id": "a9efc1ef-3900-494f-a460-963e3f5f6928",
+                "versionSpec": "1.*",
+                "definitionType": "task"
+              },
+              "inputs": {
+                "ram": "",
+                "threads": ""
+              }
+            },
+            {
+              "environment": {},
+              "enabled": true,
+              "continueOnError": false,
+              "alwaysRun": false,
+              "displayName": "Publish Results",
+              "timeoutInMinutes": 0,
+              "retryCountOnTaskFailure": 0,
+              "condition": "succeeded()",
+              "task": {
+                "id": "a95ad3e1-3950-494f-a460-963e3f5f6928",
+                "versionSpec": "1.*",
+                "definitionType": "task"
+              },
+              "inputs": {}
+            }
+          ],
+          "name": "Advanced Security Job",
+          "refName": "GHAzDO_Job",
+          "condition": "succeeded()",
+          "target": {
+            "executionOptions": {
+              "type": 0
+            },
+            "allowScriptsAuthAccessOption": false,
+            "type": 1
+          },
+          "jobAuthorizationScope": "project"
+        }
+      ],
+      "target": {
+        "agentSpecification": {
+          "identifier": "ubuntu-latest"
+        }
+      },
+      "type": 1
+    },
+    "repository": {
+      "properties": {
+        "cleanOptions": "0",
+        "labelSources": "0",
+        "labelSourcesFormat": "$(build.buildNumber)",
+        "reportBuildStatus": "true",
+        "fetchDepth": "1",
+        "gitLfsSupport": "false",
+        "skipSyncSource": "false",
+        "checkoutNestedSubmodules": "false"
+      },
+      "id": "REPLACE",
+      "type": "tfsGit",
+      "clean": "false",
+      "checkoutSubmodules": false
+    },
+    "processParameters": {},
+    "quality": "definition",
+    "drafts": [],
+    "queue": "REPLACE",
+    "path": "REPLACE",
+    "type": "build",
+    "queueStatus": "enabled",
+    "name": "GHAzDO Analysis - REPLACE",
+    "folder": "REPLACE"
+  }
