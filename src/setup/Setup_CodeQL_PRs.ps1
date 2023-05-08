@@ -35,7 +35,7 @@ The specific Project in that Organization that we will work against
 An ADO PAT that has permissions to create PRs and Pipelines in the given Project. Specific scopes for this PAT have not been determined, though it works with a full-scope PAT.
 
 .PARAMETER RepoId
-Optional single-repo parameter that allows for a more targeted setup. 
+Optional single-repo parameter that allows for a more targeted setup.
 
 .EXAMPLE
 PS C:\> .\Setup_CodeQL_PRs.ps1 -OrganizationName 'MyOrg' -ProjectName 'MyProject' -ADOPat 'ADOPAT'
@@ -64,7 +64,7 @@ Import-Module ./Common.psm1 -Force
 
 # Setup Constants
 $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($ADOPat)")) }
-$Folder = "GHAzDO-YAML" 
+$Folder = "GHAzDO-YAML"
 
 $ProjectId = getProjectId $OrganizationName $ProjectName -AuthHeader $Headers
 $ids = getExistingPipelines $OrganizationName $ProjectId $Folder $Headers
@@ -87,11 +87,11 @@ foreach ($repo in $RepoLanguage) {
             $langstring = $distinct -join ","
             $repository = getRepository $OrganizationName $ProjectId $repo.id $Headers
             if ($ids.ContainsKey($repository.id)){
-                Write-Host "Updating YAML for $($repo.name)"
+                Write-Verbose "Updating YAML for $($repo.name)"
                 updateYaml $OrganizationName $ProjectId $repository $langstring $Headers
             }
             else {
-                Write-Host "Creating Build Definition PR for $($repo.name)"
+                Write-Verbose "Creating Build Definition PR for $($repo.name)"
                 createYaml $OrganizationName $ProjectId $repository.id $langstring $repository.defaultBranch $Headers
                 createPullRequest $OrganizationName $ProjectId $repository.id $repository.defaultBranch $Headers
                 $pipelineId = createYamlPipeline $OrganizationName $ProjectId $repository.id $Folder $Headers
@@ -100,6 +100,6 @@ foreach ($repo in $RepoLanguage) {
         }
     }
     Else {
-        Write-Host "Skipping Repository $($repo.name)"
+        Write-Verbose "Skipping Repository $($repo.name)"
     }
 }

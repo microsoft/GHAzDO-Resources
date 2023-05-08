@@ -21,8 +21,8 @@ Import-Module ./Common.psm1 -Force
 
 $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($ADOPat)")) }
 
-$FolderPath_Interpreted= "\GHAS-on-ADO-Scanning" 
-$FolderPath_Compiled= "\GHAS-on-ADO-Compiled" 
+$FolderPath_Interpreted= "\GHAS-on-ADO-Scanning"
+$FolderPath_Compiled= "\GHAS-on-ADO-Compiled"
 $FolderPath_Yaml = "\GHAzDO-YAML"
 
 $ProjectId = getProjectId $OrganizationName $ProjectName $Headers

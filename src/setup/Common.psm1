@@ -1,4 +1,4 @@
-<# 
+<#
 .DESCRIPTION
 Common Functions Module for GHAzDO Setup Scripts
 

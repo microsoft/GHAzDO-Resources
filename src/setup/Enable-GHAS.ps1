@@ -72,18 +72,18 @@ if ($Repositories.count -gt 2000){
 }
 foreach ($repo in $Repositories.value) {
     if ($RepositoryList -and ($RepositoryList -notcontains $repo.name)) {
-        Write-Host "Skipping $($repo.name) as it is not in the list of Repositories to enable"
+        Write-Verbose "Skipping $($repo.name) as it is not in the list of Repositories to enable"
         continue
     }
-    
+
     $enabled = Get-GHASEnablement -OrganizationName $OrganizationName -ProjectId $ProjectId -Repository $repo -AuthHeader $Headers
 
     if ($enabled -eq $true) {
-        Write-Host "GHAS is already enabled for $($repo.name)"
+        Write-Verbose "GHAS is already enabled for $($repo.name)"
         continue
     }
     else {
-        Write-Host "Enabling GHAS for $($repo.name)"
+        Write-Verbose "Enabling GHAS for $($repo.name)"
         Enable-GHAzDO -OrganizationName $OrganizationName -ProjectId $ProjectId -Repository $repo -EnablePushProtection $EnablePushProtection -AuthHeader $Headers
         Start-Sleep 1
     }
