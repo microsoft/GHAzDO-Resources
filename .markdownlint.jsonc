@@ -1,0 +1,9 @@
+{
+  "line-length": false,
+  "no-duplicate-heading": {
+    "siblings_only": true
+  },
+  "ol-prefix": {
+    "style": "ordered"
+  }
+}
