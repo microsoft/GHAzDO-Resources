@@ -1,14 +1,10 @@
-# Project
+# GitHub Advanced Security on Azure DevOps Resources
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+## About
 
-As the maintainer of this project, please make a few updates:
-
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+This project is a series of scripts and other resources for demonstrating and accelerating adoption of GitHub Advanced
+Security for Azure DevOps. These scripts are primarily for demonstration purposes, and should not be construed as part of
+the GHAS on ADO product.
 
 ## Contributing
 
