@@ -30,7 +30,7 @@ function  getProjectId {
     )
 
     $uriAccount = "https://dev.azure.com/$($OrganizationName)/_apis/projects"
-    $projects = Invoke-RestMethod -Uri $uriAccount -Method get -Headers $AuthHeader 
+    $projects = Invoke-RestMethod -Uri $uriAccount -Method get -Headers $AuthHeader
     $project = $projects.value | Where-Object {$_.name -EQ $ProjectName}
     return $project.id
 }
@@ -186,7 +186,7 @@ function getQueue {
     )
 
     $uriQueue = "https://dev.azure.com/$($OrganizationName)/$($ProjectId)/" + "_apis/distributedtask/queues"
-    $queues = Invoke-RestMethod -Uri $uriQueue -Method get -Headers $AuthHeader 
+    $queues = Invoke-RestMethod -Uri $uriQueue -Method get -Headers $AuthHeader
     $queue = $queues.value | Where-Object {$_.name -EQ $QueueName}
     return $queue
 }
@@ -219,8 +219,8 @@ function ensureFolder {
     $FolderPath = "//$($FolderName)//"
     # Somehow the 7.0 Prod APIs aren't there yet, so we have to use the 7.1-preview.2
     $FolderUri = "https://dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/build/folders/$($FolderPath)?api-version=7.1-preview.2"
-    $Folder = Invoke-RestMethod -Uri $FolderUri -Method get -Headers $AuthHeader 
-    if ($Folder.count = 0){ 
+    $Folder = Invoke-RestMethod -Uri $FolderUri -Method get -Headers $AuthHeader
+    if ($Folder.count -eq 0){
         $UriCreateFolder = "https://dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/build/folders&api-version=7.1-preview.2"
         $Body="{"+'"path" : "'+$($FolderPath)+' "}'
         $Folder = Invoke-RestMethod -Uri $UriCreateFolder -Method PUT -Headers $AuthHeader -Body $Body -ContentType 'application/json'
@@ -263,7 +263,7 @@ function createYaml {
     $defaultbranch = ($DefaultRef -Split "/")[-1]
 
     $headURI = "https://dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/git/repositories/$RepositoryId/refs/heads/$defaultbranch"
-    $resp = Invoke-RestMethod -Uri $headURI -Headers $AuthHeader -Method Get 
+    $resp = Invoke-RestMethod -Uri $headURI -Headers $AuthHeader -Method Get
     $latestCommit = $resp.value.ObjectId
     # Create a new branch for the changes
     $branchRef = "refs/heads/$BranchName"
@@ -342,7 +342,6 @@ function createPullRequest {
         [hashtable]$AuthHeader
     )
 
-    
     # Create a new pull request with the changes
     $pullRequestTitle = "GitHub Advanced Security Pipeline Setup"
     $pullRequestBody = "This Pull Request adds a default GitHub Advanced Security Pipeline to the repository, for the interpreted languages detected by Azure DevOps. The pipeline will run on every push to the default branch, and will run CodeQL on the repository."
@@ -497,14 +496,14 @@ function createBuildDefinition {
     )
 
     $FolderPath = "//$($FolderName)//"
-    $definition = Get-Content '.\build_definition.json' | Out-String | convertfrom-json 
+    $definition = Get-Content '.\build_definition.json' | Out-String | convertfrom-json
     $definition.repository.id=$RepositoryId
     $definition.name="GHAzDO Analysis - "+$RepositoryId
     $definition.folder=$FolderPath
     $definition.path=$FolderPath
     $definition.triggers[0].branchFilters[0] = "+"+$DefaultRef
     $definition.process.phases[0].steps[0].inputs.languages=$LanguageString
-    $queue = getQueue $OrganizationName $ProjectId $AuthHeader
+    $queue = getQueue -OrganizationName $OrganizationName -ProjectId $ProjectId -AuthHeader $AuthHeader
     $definition.queue = $queue
 
     $UriPipelines="https://dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/build/definitions?api-version=7.1-preview.7"
@@ -542,7 +541,7 @@ function updatePipeline {
         [hashtable]$AuthHeader
     )
 
-    $pipeline = Invoke-RestMethod -Uri $PipelineURI -Method Get -Headers $AuthHeader 
+    $pipeline = Invoke-RestMethod -Uri $PipelineURI -Method Get -Headers $AuthHeader
     $definition = $pipeline.configuration.designerJson
     if ($definition.process.phases[0].steps[0].inputs.languages -ne $LanguageString) {
         $definition.process.phases[0].steps[0].inputs.languages = $LanguageString
@@ -588,7 +587,7 @@ function updateYaml {
     $branchRef = "refs/heads/$BranchName"
 
     $headURI = "https://dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/git/repositories/$($Repository.id)/$($Repository.defaultBranch)"
-    $resp = Invoke-RestMethod -Uri $headURI -Headers $AuthHeader -Method Get 
+    $resp = Invoke-RestMethod -Uri $headURI -Headers $AuthHeader -Method Get
     $latestCommit = $resp.value.ObjectId
     # check if we need a new branch for the changes
     $branchURI = "https://dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/git/repositories/$($Repository.Id)/refs/heads/$($BranchName)"
