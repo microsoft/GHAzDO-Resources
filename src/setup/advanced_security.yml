@@ -1,0 +1,48 @@
+pool:
+  # Supported VM Images: windows, macos, ubuntu
+  vmImage: ubuntu-latest
+
+# Default branch builds with batching
+trigger:
+  batch: true
+  branches:
+    include:
+    - --BRANCH_REPLACE--
+    - GHAS-on-ADO-Autosetup
+
+#Also run on PRs to default branch
+pr: 
+- --BRANCH_REPLACE--
+
+
+variables:
+  # Valid values for Language are: csharp,cpp,go,java,javascript,python,ruby
+  # Multiple languages can be separated by a comma.
+  advancedsecurity.codeql.language: --REPLACE--
+  # advancedsecurity.codeql.logLevel: 2
+  # advancedsecurity.codeql.debug: true
+
+steps:
+  - task: AdvancedSecurity-Codeql-Init@1
+    displayName: Initialize CodeQL
+  # To use your own custom build tasks, remove the AutoBuild task
+  # and replace with your own build steps to compile the project.
+  #
+  # If the language specified is cpp, java, or csharp,
+  # either custom or AutoBuild build steps are required. The Analyze task
+  # will fail if build tasks are not run.
+  #
+  # For all other languages, build steps are not required.
+  # AutoBuild can be included or not for these languages. If it is included, 
+  # AutoBuild will complete successfully, without performing any action.
+  - task: AdvancedSecurity-Codeql-Autobuild@1
+    displayName: AutoBuild
+  # CodeQL Analysis Task
+  - task: AdvancedSecurity-Codeql-Analyze@1
+    displayName: Perform CodeQL Analysis
+  # Dependency Scanning Task
+  - task: AdvancedSecurity-Dependency-Scanning@1
+    displayName: Dependency Scanning
+  #Upload Results to Advanced Security Service
+  - task: AdvancedSecurity-Publish@1
+    displayName: Publish code scanning results
