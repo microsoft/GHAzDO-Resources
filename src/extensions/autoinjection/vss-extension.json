@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "ghazdo-dependency-injection",
     "name": "GHAzDO Dependency Injection",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "GHAzDOPreview",
     "targets": [
         {
