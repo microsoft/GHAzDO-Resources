@@ -1,0 +1,4 @@
+steps:
+- ${{ if and(eq(resources.repositories['self'].ref, resources.repositories['self'].defaultBranch), not(containsValue(job.steps.*.task.id, 'F97AACE4-962A-441B-9141-B842D806B9C7'))) }}:
+  - task: AdvancedSecurity-Dependency-Scanning@1
+    displayName: Dependency Scanning (Autoinjected)
