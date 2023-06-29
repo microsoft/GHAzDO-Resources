@@ -1,0 +1,36 @@
+{
+    "manifestVersion": 1,
+    "id": "ghazdo-codeql-injection",
+    "name": "GHAzDO CodeQL Injection",
+    "version": "0.0.4",
+    "publisher": "GHAzDOPreview",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],    
+    "description": "GitHub Advanced Security on Azure DevOps CodeQL  Injection mechanism",
+    "categories": ["Azure Repos", "Azure Pipelines"],
+    "icons": {
+        "default": "images/icon.png"
+    },
+    "files": [
+        {
+            "path": "decorator.yml",
+            "addressable": true,
+            "contentType": "text/plain"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "ghazdo-codeql-injection",
+            "type": "ms.azure-pipelines.pipeline-decorator",
+            "targets": [
+                "ms.azure-pipelines-agent-job.post-job-tasks"
+            ],
+            "properties": {
+                "template": "decorator.yml"
+            }
+        }
+    ]
+}

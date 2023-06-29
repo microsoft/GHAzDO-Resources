@@ -1,0 +1,36 @@
+{
+    "manifestVersion": 1,
+    "id": "advancedsecurity-codeql-autoconfig-task",
+    "name": "CodeQL Automatic Configuration Task",
+    "version": "0.1.5",
+    "publisher": "GHAzDOPreview",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],    
+    "description": "CodeQLAuto",
+    "categories": [
+        "Azure Pipelines"
+    ],
+    "icons": {
+        "default": "images/icon.png"        
+    },
+    "files": [
+        {
+            "path": "buildandreleasetask"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "custom-build-release-task",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "buildandreleasetask"
+            }
+        }
+    ]
+}
