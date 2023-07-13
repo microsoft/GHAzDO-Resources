@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
+    "id": "baf4f6ce-cafe-48a0-8373-11a874a213d5",
+    "name": "AdvancedSecurity-CodeQL-Autoconfig",
+    "friendlyName": "Advanced Security CodeQL Autoconfigurator",
+    "instanceNameFormat": "Automatically configure CodeQL",
+    "description": "Sets Variables and automatically configures CodeQL for use in the pipeline",
+    "helpMarkDown": "Use the CodeQL Autoconfig Task to do a Zeroconfig CodeQL Setup.",
+    "helpUrl": "https://aka.ms/advanced-security/code-scanning/detection",
+    "category": "Utility",
+    "author": "Microsoft Corporation",
+    "version": {
+        "Major": 0,
+        "Minor": 1,
+        "Patch": 5
+    },
+    "execution": {
+        "Node": {
+            "target": "index.js"
+        }
+    }
+}

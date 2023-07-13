@@ -1,0 +1,13 @@
+steps:
+- ${{ if and(eq(resources.repositories['self'].ref, resources.repositories['self'].defaultBranch), not(containsValue(job.steps.*.task.id, 'a9efc1ef-3900-494f-a460-963e3f5f6928'))) }}:
+  - task: AdvancedSecurity-CodeQL-Autoconfig@0
+    displayName: Configure CodeQL Languages (Autoinjected)
+  - task: AdvancedSecurity-CodeQL-Init@1
+    displayName: Initialize CodeQL Scanning (Autoinjected)
+    condition: eq(variables['AdvancedSecurity.CodeQL.Autoconfig'], 'true')
+  - task: AdvancedSecurity-CodeQL-Analyze@1
+    displayName: Perform CodeQL Analysis (Autoinjected)
+    condition: eq(variables['AdvancedSecurity.CodeQL.Autoconfig'], 'true')
+  - task: AdvancedSecurity-Publish@1
+    displayName: Publish CodeQL Results (Autoinjected)
+    condition: eq(variables['AdvancedSecurity.CodeQL.Autoconfig'], 'true')
