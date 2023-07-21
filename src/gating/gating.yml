@@ -1,0 +1,8 @@
+ # add Gating Task
+ - task: PowerShell@2
+      displayName: 'Gating pipeline based on Advanced Security alerts'
+      inputs:
+        targetType: filePath
+        filePath: gating.ps1
+      env: 
+        MAPPED_ADO_PAT: $(gating)
