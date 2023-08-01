@@ -11,31 +11,38 @@ async function run() {
     try {
         
         // Check for presence of CodeQL before running
-        console.log(`Tool Cache Directory: ${tl.getVariable('Agent.ToolsDirectory')}`);
+        //console.log(`Tool Cache Directory: ${tl.getVariable('Agent.ToolsDirectory')}`);
         const versions: string[] = [];
         const arch = os.arch();
+        //console.log(`Architecture: ${arch}`);
         const toolPath = path.join(tl.getVariable('Agent.ToolsDirectory')!, "CodeQL");
+        //console.log(`Tool Path: ${toolPath}`);
         if (fs.existsSync(toolPath)) {
             const children = fs.readdirSync(toolPath);
             for (const child of children) {
                 const fullPath = path.join(toolPath, child, arch || "");
+                //console.log(`Checking ${fullPath}`);
                 if (fs.existsSync(fullPath) && fs.existsSync(`${fullPath}.complete`)) {
                     versions.push(child);
+                    //console.log(`Found ${child}`);
                 }
             }
         }
-        if (versions.length === 0) {throw new Error(`CodeQL not installed`);}
+        if (versions.length === 0) {
+            //console.log(`CodeQL not installed; Could not find any versions in ${toolPath}`);
+            throw new Error(`CodeQL not installed`);
+        }
 
         const completeFile = path.resolve(tl.getVariable('Agent.ToolsDirectory')!, 'CodeQL', );
 
         if (!fs.existsSync(completeFile)) {
+            //console.log(`CodeQL not installed; Could not find complete file ${completeFile}`);
             throw new Error(`CodeQL not installed`);
         }
 
         const uriBase = tl.getVariable('System.CollectionUri') as string;
         const projectId = tl.getVariable('System.TeamProjectId') as string ;
         const repositoryId = tl.getVariable('Build.Repository.ID') as string;
-        tl.setVariable('AdvancedSecurity.CodeQL.Autoconfig', 'failed');
         const token = tl.getVariable('System.AccessToken') as string;
 
         console.log(`Using Project ${projectId}`);
@@ -94,6 +101,7 @@ async function run() {
     catch (err) {
         tl.setVariable('AdvancedSecurity.CodeQL.Autoconfig', 'failed');
         console.log('CodeQL Autoconfig failed');
+        console.log(err);
     }
 }
 
