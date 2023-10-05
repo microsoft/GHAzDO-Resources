@@ -37,7 +37,9 @@
                 "definitionType": "task"
               },
               "inputs": {
-                "languages": "javascript"
+                "languages": "javascript",
+                "ram":"5120",
+                "threads":"0"
               }
             },
             {
@@ -74,22 +76,6 @@
                 "ram": "",
                 "threads": ""
               }
-            },
-            {
-              "environment": {},
-              "enabled": true,
-              "continueOnError": false,
-              "alwaysRun": false,
-              "displayName": "Publish Results",
-              "timeoutInMinutes": 0,
-              "retryCountOnTaskFailure": 0,
-              "condition": "succeeded()",
-              "task": {
-                "id": "a95ad3e1-3950-494f-a460-963e3f5f6928",
-                "versionSpec": "1.*",
-                "definitionType": "task"
-              },
-              "inputs": {}
             }
           ],
           "name": "Advanced Security Job",

@@ -16,15 +16,18 @@ pr:
 
 
 variables:
-  # Valid values for Language are: csharp,cpp,go,java,javascript,python,ruby
-  # Multiple languages can be separated by a comma.
-  advancedsecurity.codeql.language: --REPLACE--
   # advancedsecurity.codeql.logLevel: 2
   # advancedsecurity.codeql.debug: true
 
 steps:
   - task: AdvancedSecurity-Codeql-Init@1
     displayName: Initialize CodeQL
+    inputs: 
+      # Valid values for Language are: csharp,cpp,go,java,javascript,python,ruby
+      # Multiple languages can be separated by a comma.
+      languages: --REPLACE--
+      ram: 5120
+      threads: 0
   # To use your own custom build tasks, remove the AutoBuild task
   # and replace with your own build steps to compile the project.
   #
@@ -43,6 +46,3 @@ steps:
   # Dependency Scanning Task
   - task: AdvancedSecurity-Dependency-Scanning@1
     displayName: Dependency Scanning
-  #Upload Results to Advanced Security Service
-  - task: AdvancedSecurity-Publish@1
-    displayName: Publish code scanning results
