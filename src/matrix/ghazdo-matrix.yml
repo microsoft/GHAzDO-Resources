@@ -1,0 +1,36 @@
+# Sample CodeQL matrix build for java and javascript
+#
+# To decrease your wall clock time inside a single pipeline with multiple languages, you might consider running jobs in parallel using a matrix strategy (https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/jobs-job-strategy?view=azure-pipelines#strategy-matrix-maxparallel).
+# This strategy will require you to have multiple available parallel jobs available to take advantage of the concurrent work.
+# This can be achieved with organization level configuration (https://learn.microsoft.com/en-us/azure/devops/pipelines/licensing/concurrent-jobs) along with both Microsoft-hosted and self-hosted agents.
+# Also note that each Visual Studio Enterprise subscriber gets one self-hosted parallel job as a subscriber benefit!
+trigger:
+  - master
+
+pool:
+  vmImage: ubuntu-latest
+
+strategy:
+  matrix:
+    frontend:
+      language: javascript
+    backend:
+      language: java
+
+steps:
+  - task: AdvancedSecurity-Codeql-Init@1
+    inputs:
+      languages: "$(language)"
+
+  # Need to compile Java code while CodeQL tracer is running
+  - task: AdvancedSecurity-Codeql-Autobuild@1
+    #condition: eq('$(language)', 'java') - doesnt work always false, expands to null: https://stackoverflow.com/a/61093679/343347
+    condition: and(succeeded(), eq(variables.language, 'java'))
+
+  - task: AdvancedSecurity-Codeql-Analyze@1
+
+  # run dependency task for java, we are not doing anything dynamic with javascript in this pipeline - all languages will be picked up here
+  - task: AdvancedSecurity-Dependency-Scanning@1
+    condition: and(succeeded(), eq(variables.language, 'java'))
+
+  - task: AdvancedSecurity-Publish@1
