@@ -37,9 +37,7 @@
                 "definitionType": "task"
               },
               "inputs": {
-                "languages": "javascript",
-                "ram":"5120",
-                "threads":"0"
+                "languages": "javascript"
               }
             },
             {
