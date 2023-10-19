@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+    Gating script for Azure DevOps Advanced Security.
+.DESCRIPTION
+    This script checks for GHAzDO security alerts for a specific repository and fails the build if any alerts are found that are outside of the specified SLA policy.
+.EXAMPLE
+    $env:MAPPED_ADO_PAT = "TODO-ADVSEC-SCOPED-PAT-HERE"
+    gating.ps1
+.NOTES
+    This script is intended to be used as a build pipeline task in Azure DevOps.
+
+    This script requires the following environment variables to be set:
+    - MAPPED_ADO_PAT: The Azure DevOps Personal Access Token (PAT) with Advanced Security read permissions.
+
+    This script utilizes the following predefined environment variables:
+    - SYSTEM_COLLECTIONURI: The URL of the Azure DevOps organization.
+    - SYSTEM_TEAMPROJECT: The name of the Azure DevOps project.
+    - BUILD_REPOSITORY_ID: The ID of the Azure DevOps repository.
+    - BUILD_REPOSITORY_NAME: The name of the Azure DevOps repository.
+    - BUILD_BUILDNUMBER: The build number of the Azure DevOps build.
+#>
+
 $pass = ${env:MAPPED_ADO_PAT} #$env:MAPPED_ADO_PAT = "TODO-ADVSEC-SCOPED-PAT-HERE"
 $orgUri = ${env:SYSTEM_COLLECTIONURI} #$(System.CollectionUri) #$env:SYSTEM_COLLECTIONURI = "https://dev.azure.com/TODO-YOUR-ORG-HERE/"
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
@@ -28,7 +50,7 @@ $alertTypes = @("code", "secret", "dependency")
 $failingAlerts = foreach ($alert in $parsedAlerts.value) {
     if ($alert.severity -in $severities `
             -and $alert.state -in $states `
-            -and $alert.firstSeen -as [DateTime] -lt (Get-Date).ToUniversalTime().AddDays(-$slaDays) `
+            -and $alert.firstSeenDate -lt (Get-Date).ToUniversalTime().AddDays(-$slaDays) `
             -and $alert.alertType -in $alertTypes) {
         @{
             "Alert Title"  = $alert.title
@@ -36,8 +58,8 @@ $failingAlerts = foreach ($alert in $parsedAlerts.value) {
             "Alert Type"   = $alert.alertType
             "Severity"     = $alert.severity
             "Description"  = $alert.rule.description
-            "First Seen"   = $alert.firstSeen -as [DateTime]
-            "Days overdue" = [int]((Get-Date).ToUniversalTime().AddDays(-$slaDays) - ($alert.firstSeen -as [DateTime])).TotalDays
+            "First Seen"   = $alert.firstSeenDate
+            "Days overdue" = [int]((Get-Date).ToUniversalTime().AddDays(-$slaDays) - ($alert.firstSeenDate)).TotalDays
             "Alert Link"   = "$($alert.repositoryUrl)/alerts/$($alert.alertId)"
         }
     }
