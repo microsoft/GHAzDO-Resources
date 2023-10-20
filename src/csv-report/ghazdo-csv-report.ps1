@@ -2,7 +2,7 @@
 .SYNOPSIS
     This script generates a CSV report of Azure DevOps Advanced Security alerts for a given organization, project, and repository.
 .DESCRIPTION
-    This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository. 
+    This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository.
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
 .PARAMETER None
     This script does not accept any parameters.
