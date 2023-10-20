@@ -43,7 +43,7 @@ $severityDays = @{
 }
 
 # get list of projects in the Organization
-$url = "https://dev.azure.com/{0}/_apis/projects?api-version=6.0" -f $orgName
+$url = "https://dev.azure.com/{0}/_apis/projects" -f $orgName
 $projectsResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
 $projects = ($projectsResponse.Content | ConvertFrom-Json).value
 
@@ -53,7 +53,7 @@ $scans = @()
 
 if ($allRepos) {
     foreach ($proj in $projects) {
-        $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories?api-version=6.0" -f $orgName, $proj.name
+        $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories" -f $orgName, $proj.name
         $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
         $repos = ($reposResponse.Content | ConvertFrom-Json).value
         #$repos.value | Where-Object { $_.id -eq $repositoryId } | Select-Object -ExpandProperty id
@@ -79,7 +79,7 @@ else {
 
 
 
-#loop through repo alert list
+#loop through repo alert list - https://learn.microsoft.com/en-us/rest/api/azure/devops/alert/alerts/list
 [System.Collections.ArrayList]$alertList = @()
 foreach ($scan in $scans) {   
     $project = $scan.ProjectName
@@ -87,8 +87,7 @@ foreach ($scan in $scans) {
     $repositoryId = $scan.RepoId
     $alerts = $null
     $parsedAlerts = $null
-    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/AdvancedSecurity/Repositories/{2}/alerts?useDatabaseProvider=true" -f $orgName, $project, $repositoryId
-
+    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryId            
     # Send out warnings for any org/project/repo that we cannot access alerts for!
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
