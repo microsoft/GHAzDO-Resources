@@ -90,12 +90,25 @@ foreach ($scan in $scans) {
     $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryId            
     # Send out warnings for any org/project/repo that we cannot access alerts for!
     try {
-        $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
+        $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
         if ($alerts.StatusCode -ne 200) {
-            Write-Host "##vso[task.logissue type=warning] Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription
+            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/management/repo-enablement/get?view=azure-devops-rest-7.2
+            $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repositoryId
+            $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
+            $enablement = $repoEnablement.content | ConvertFrom-Json
+
+            if(!$enablement.advSecEnabled)
+            {
+                Write-Host "##vso[debug]Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
+            }
+            else {
+                # 403 = Token has no permissions to view Advanced Security alerts
+                Write-Host "##vso[task.logissue type=warning] Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName, $repositoryId
+            }
+            
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "##vso[debug]Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryId"
+        Write-Host "##vso[debug]Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
     }
     catch {
         Write-Host "##vso[task.logissue type=warning] Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
