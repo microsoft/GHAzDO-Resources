@@ -4,19 +4,16 @@
 .DESCRIPTION
     This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository.
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
-.PARAMETER pass
-    The Azure DevOps Personal Access Token (PAT) with Advanced Security read permissions.
-    If not specified, the script will prompt the user to enter the PAT or use the MAPPED_ADO_PAT environment variable.
+    The script contains an SLA based on number of days since the alert was first seen. For critical it is 7 days, high is 30 days, medium is 90 days, and low is 180 days.
+.PARAMETER pass    
+    The Azure DevOps Personal Access Token (PAT) with Advanced Security alert read permissions.
+    If not specified, the script will require the MAPPED_ADO_PAT environment variable.
 .PARAMETER orgUri
     The URL of the Azure DevOps organization.
     If not specified, the script will use the SYSTEM_COLLECTIONURI environment variable.
 .PARAMETER project
     The name of the Azure DevOps project.
     If not specified, the script will use the SYSTEM_TEAMPROJECT environment variable.
-    Only required if allRepos is set to $false.
-.PARAMETER repositoryId
-    The ID of the Azure DevOps repository.
-    If not specified, the script will use the BUILD_REPOSITORY_ID environment variable.
     Only required if allRepos is set to $false.
 .PARAMETER repositoryName
     The name of the Azure DevOps repository.
@@ -34,12 +31,10 @@
     -pass "myPersonalAccessToken" `
     -orgUri "https://dev.azure.com/myOrganization" `
     -project "myProject" `
-    -repositoryId "myRepositoryGUID" `
     -repositoryName "myRepositoryName" `
     -reportName "ghazdo-report-$(Get-Date -Format "yyyyMMdd").1.csv"
 .NOTES
-    This script requires the following environment variables to be set or passed in:
-    - MAPPED_ADO_PAT: The Azure DevOps Personal Access Token (PAT) with Advanced Security read permissions.
+    This script requires the `pass` parameter to be set or the `MAPPED_ADO_PAT` environment variable to be set.
 #>
 
 param(
@@ -48,8 +43,6 @@ param(
     [string]$orgUri = ${env:SYSTEM_COLLECTIONURI},
     #ADO: $(System.TeamProject)
     [string]$project = ${env:SYSTEM_TEAMPROJECT},
-    #ADO: $(Build.Repository.ID)
-    [string]$repositoryId = ${env:BUILD_REPOSITORY_ID},
     #ADO: $(Build.Repository.Name)
     [string]$repositoryName = ${env:BUILD_REPOSITORY_NAME},
     #ADO: $(Build.BuildNumber)
@@ -77,23 +70,20 @@ $url = "https://dev.azure.com/{0}/_apis/projects" -f $orgName
 $projectsResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
 $projects = ($projectsResponse.Content | ConvertFrom-Json).value
 
-# create a hashtable to hold org name, project name and repo id
+# create a hashtable to hold org name, project name and repo name
 $scans = @()
-
 
 if ($allRepos) {
     foreach ($proj in $projects) {
         $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories" -f $orgName, $proj.name
         $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
         $repos = ($reposResponse.Content | ConvertFrom-Json).value
-        #$repos.value | Where-Object { $_.id -eq $repositoryId } | Select-Object -ExpandProperty id
-        # Add the org name, project name, and repo ID to the hashtable for each repository
+        # Add the org name, project name, and repo name to the hashtable for each repository
         foreach ($repo in $repos) {
             $scans += @{
                 OrgName     = $orgName
                 ProjectName = $proj.name
                 RepoName    = $repo.name
-                RepoId      = $repo.id
             }
         }
     }
@@ -103,7 +93,6 @@ else {
         OrgName     = $orgName
         ProjectName = $project
         RepoName    = $repositoryName
-        RepoId      = $repositoryId
     }
 }
 
@@ -112,29 +101,28 @@ else {
 foreach ($scan in $scans) {
     $project = $scan.ProjectName
     $repositoryName = $scan.RepoName
-    $repositoryId = $scan.RepoId
     $alerts = $null
     $parsedAlerts = $null
-    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryId
+    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryName
     # Send out warnings for any org/project/repo that we cannot access alerts for!
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
         if ($alerts.StatusCode -ne 200) {
             # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/management/repo-enablement/get?view=azure-devops-rest-7.2
-            $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repositoryId
+            $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repositoryName
             $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
-                Write-Host "$($isAzdo ? '##vso[debug]' : '')Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
+                Write-Host "$($isAzdo ? '##vso[debug]' : '')Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName"
             }
             else {
                 # 403 = Token has no permissions to view Advanced Security alerts
-                Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName, $repositoryId
+                Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName
             }
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "$($isAzdo ? '##vso[debug]' : '')Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
+        Write-Host "$($isAzdo ? '##vso[debug]' : '')Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName"
     }
     catch {
         Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
