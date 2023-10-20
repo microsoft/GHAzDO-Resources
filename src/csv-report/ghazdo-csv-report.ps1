@@ -4,34 +4,64 @@
 .DESCRIPTION
     This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository.
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
-.PARAMETER None
-    This script does not accept any parameters.
+.PARAMETER pass
+    The Azure DevOps Personal Access Token (PAT) with Advanced Security read permissions.
+    If not specified, the script will prompt the user to enter the PAT or use the MAPPED_ADO_PAT environment variable.
+.PARAMETER orgUri
+    The URL of the Azure DevOps organization.
+    If not specified, the script will use the SYSTEM_COLLECTIONURI environment variable.
+.PARAMETER project
+    The name of the Azure DevOps project.
+    If not specified, the script will use the SYSTEM_TEAMPROJECT environment variable.
+    Only required if allRepos is set to $false.
+.PARAMETER repositoryId
+    The ID of the Azure DevOps repository.
+    If not specified, the script will use the BUILD_REPOSITORY_ID environment variable.
+    Only required if allRepos is set to $false.
+.PARAMETER repositoryName
+    The name of the Azure DevOps repository.
+    If not specified, the script will use the BUILD_REPOSITORY_NAME environment variable.
+    Only required if allRepos is set to $false.
+.PARAMETER reportName
+    The name of the csv report.
+    If not specified, the script will use the BUILD_BUILDNUMBER environment variable or generate a default value.
+.PARAMETER allRepos
+    A boolean value that indicates whether to run the script for all repositories in the organization and project.
+    If set to $true, the script will run for all repositories. If set to $false, the script use the specified Organization/Project/Repository.
+    If not specified, the script will default to $true.
 .EXAMPLE
-    .\ghazdo-csv-report.ps1
-    This command generates a CSV report of Advanced Security alerts for the organization, project, and repository specified in the environment variables.
+    .\ghazdo-csv-report.ps1 `
+    -pass "myPersonalAccessToken" `
+    -orgUri "https://dev.azure.com/myOrganization" `
+    -project "myProject" `
+    -repositoryId "myRepositoryGUID" `
+    -repositoryName "myRepositoryName" `
+    -reportName "ghazdo-report-$(Get-Date -Format "yyyyMMdd").1.csv"
 .NOTES
-    This script requires the following environment variables to be set:
+    This script requires the following environment variables to be set or passed in:
     - MAPPED_ADO_PAT: The Azure DevOps Personal Access Token (PAT) with Advanced Security read permissions.
-
-    This script utilizes the following predefined environment variables:
-    - SYSTEM_COLLECTIONURI: The URL of the Azure DevOps organization.
-    - SYSTEM_TEAMPROJECT: The name of the Azure DevOps project.
-    - BUILD_REPOSITORY_ID: The ID of the Azure DevOps repository.
-    - BUILD_REPOSITORY_NAME: The name of the Azure DevOps repository.
-    - BUILD_BUILDNUMBER: The build number of the Azure DevOps build.
 #>
-$pass = ${env:MAPPED_ADO_PAT} #$env:MAPPED_ADO_PAT = "TODO-ADVSEC-SCOPED-PAT-HERE"
-$orgUri = ${env:SYSTEM_COLLECTIONURI} #$(System.CollectionUri) #$env:SYSTEM_COLLECTIONURI = "https://dev.azure.com/TODO-YOUR-ORG-HERE/"
-$orgName = $orgUri -replace "^https://dev.azure.com/|/$"
-$project = ${env:SYSTEM_TEAMPROJECT} #$(System.TeamProject) #$env:SYSTEM_TEAMPROJECT = "TODO-YOUR-PROJECT-NAME-HERE"
-$repositoryId = ${env:BUILD_REPOSITORY_ID} #$(Build.Repository.ID) #$env:BUILD_REPOSITORY_ID= "TODO-YOUR-REPO-GUID-HERE"
-$repositoryName = ${env:BUILD_REPOSITORY_NAME} #$(Build.Repository.Name) #$env:BUILD_REPOSITORY_NAME= "TODO-YOUR-REPO-NAME-HERE"
-$build = ${env:BUILD_BUILDNUMBER} # $env:BUILD_BUILDNUMBER= "$(Get-Date -Format "yyyyMMdd").1"
 
+param(
+    [string]$pass = ${env:MAPPED_ADO_PAT},
+    #ADO: $(System.CollectionUri)
+    [string]$orgUri = ${env:SYSTEM_COLLECTIONURI},
+    #ADO: $(System.TeamProject)
+    [string]$project = ${env:SYSTEM_TEAMPROJECT},
+    #ADO: $(Build.Repository.ID)
+    [string]$repositoryId = ${env:BUILD_REPOSITORY_ID},
+    #ADO: $(Build.Repository.Name)
+    [string]$repositoryName = ${env:BUILD_REPOSITORY_NAME},
+    #ADO: $(Build.BuildNumber)
+    [string]$reportName = "ghazdo-report-${env:BUILD_BUILDNUMBER}.csv",
+    [bool]$allRepos = $true
+)
+
+$orgName = $orgUri -replace "^https://dev.azure.com/|/$"
 $headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$pass")))"; }
+$isAzDO = $env:TF_BUILD -eq "True"
 
 # Report Configuration
-$allRepos = $true #run for all repos in the org/projects
 $severities = @("critical", "high", "medium", "low")
 $states = @("active", "fixed", "dismissed")
 $alertTypes = @("code", "secret", "dependency")
@@ -96,18 +126,18 @@ foreach ($scan in $scans) {
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
-                Write-Host "##vso[debug]Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
+                Write-Host "$($isAzdo ? '##vso[debug]' : '')Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
             }
             else {
                 # 403 = Token has no permissions to view Advanced Security alerts
-                Write-Host "##vso[task.logissue type=warning] Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName, $repositoryId
+                Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName, $repositoryId
             }
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "##vso[debug]Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
+        Write-Host "$($isAzdo ? '##vso[debug]' : '')Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
     }
     catch {
-        Write-Host "##vso[task.logissue type=warning] Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
+        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
     }
 
     $alertList += foreach ($alert in $parsedAlerts.value) {
@@ -149,13 +179,16 @@ foreach ($scan in $scans) {
 if ($alertList.Count -gt 1) {
     $alertList = $alertList | Sort-Object -Property "Alert Id"
 }
-$reportName = "ghazdo-report-$build.csv"
 
 if ($alertList.Count -gt 0) {
     $alertList | Format-Table -AutoSize | Out-String | Write-Host
-    $alertList | Export-Csv -Path "$reportName" -NoTypeInformation -Force
-    Write-Host "##vso[artifact.upload artifactname=AdvancedSecurityReport]${env:BUILD_SOURCESDIRECTORY}/$reportName"
+    $alertList | Export-Csv -Path "$([regex]::Replace($reportName, '[^\w\d.-]', ''))" -NoTypeInformation -Force
+    if ($isAzdo) {
+        Write-Host "##vso[artifact.upload artifactname=AdvancedSecurityReport]${env:BUILD_SOURCESDIRECTORY}/$reportName"
+    }
 }
 
-Write-Host "##vso[task.complete result=Succeeded;]DONE"
+if ($isAzdo) {
+    Write-Host "##vso[task.complete result=Succeeded;]DONE"
+}
 exit 0
