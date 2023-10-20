@@ -678,7 +678,7 @@ function Enable-GHAzDO {
         [hashtable]$AuthHeader
     )
 
-    $enableURI = "https://advsec.dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/advancedsecurity/repositories/$($Repository.Id)/enablement?api-version=1.0"
+    $enableURI = "https://advsec.dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/management/repositories/$($Repository.Id)/enablement?api-version=7.1-preview"
 
     $enableBody = @{
         "projectId"= $ProjectId
@@ -717,7 +717,7 @@ function Get-GHASEnablement {
         [hashtable]$AuthHeader
     )
 
-    $enableURI = "https://advsec.dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/advancedsecurity/repositories/$($Repository.Id)/enablement?api-version=1.0"
+    $enableURI = "https://advsec.dev.azure.com/$($OrganizationName)/$($ProjectId)/_apis/management/repositories/$($Repository.Id)/enablement?api-version=7.1-preview"
 
     $resp = Invoke-RestMethod -Uri $enableURI -Headers $AuthHeader -Method GET -ContentType 'application/json'
     return $resp.advSecEnabled
