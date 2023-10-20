@@ -2,7 +2,7 @@
 .SYNOPSIS
     This script generates a CSV report of Azure DevOps Advanced Security alerts for a given organization, project, and repository.
 .DESCRIPTION
-    This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository.
+    This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository. 
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
 .PARAMETER None
     This script does not accept any parameters.
@@ -56,6 +56,7 @@ if ($allRepos) {
         $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories?api-version=6.0" -f $orgName, $proj.name
         $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
         $repos = ($reposResponse.Content | ConvertFrom-Json).value
+        #$repos.value | Where-Object { $_.id -eq $repositoryId } | Select-Object -ExpandProperty id
         # Add the org name, project name, and repo ID to the hashtable for each repository
         foreach ($repo in $repos) {
             $scans += @{
@@ -80,7 +81,7 @@ else {
 
 #loop through repo alert list
 [System.Collections.ArrayList]$alertList = @()
-foreach ($scan in $scans) {
+foreach ($scan in $scans) {   
     $project = $scan.ProjectName
     $repositoryName = $scan.RepoName
     $repositoryId = $scan.RepoId
@@ -95,8 +96,7 @@ foreach ($scan in $scans) {
             Write-Host "##vso[task.logissue type=warning] Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "##vso[debug]Alerts($($parsedAlerts.Count)#) loaded for org:$orgName, project:$project, repo:$repositoryId"
-
+        Write-Host "##vso[debug]Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryId"
     }
     catch {
         Write-Host "##vso[task.logissue type=warning] Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
@@ -129,8 +129,10 @@ foreach ($scan in $scans) {
                 "Organization"     = $orgName
                 "Project"          = $project
                 "Repository"       = $repositoryName
+                "Ref"              = $alert.gitRef
+                "Ecosystem"        = if ($alert.logicalLocations) { ($alert.logicalLocations[0].fullyQualifiedName -split ' ')[0] } else { $null }
                 "Location Paths"   = ($alert | ForEach-Object { $_.physicalLocations | ForEach-Object { "$($_.filePath)$($_.region.lineStart ? ':' + $_.region.lineStart : '')$($_.versionControl.commitHash ? ' @ ' + $_.versionControl.commitHash.Substring(0, 8) : '')" } }) -join ","
-                "Logical Paths"    = if ($alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ) { "$($alert.logicalLocations[0].fullyQualifiedName)" } else { ($alert | ForEach-Object { $_.logicalLocations | ForEach-Object { "$($_.fullyQualifiedName)$($_.kind -match "rootDependency" ? '(root)' : '')" } }) -join "," }
+                "Logical Paths"    = if ($alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ) { "$(($alert.logicalLocations[0].fullyQualifiedName).Split(' ', 2)[1])" } else { ($alert | ForEach-Object { $_.logicalLocations | ForEach-Object { "$(if ($_.fullyQualifiedName) {($_.fullyQualifiedName).Split(' ', 2)[1]} else { $null })$($_.kind -match "rootDependency" ? '(root)' : '')" } }) -join "," }
             }
         }
     }
