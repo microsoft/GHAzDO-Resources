@@ -102,7 +102,6 @@ foreach ($scan in $scans) {
                 # 403 = Token has no permissions to view Advanced Security alerts
                 Write-Host "##vso[task.logissue type=warning] Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName, $repositoryId
             }
-            
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
         Write-Host "##vso[debug]Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
