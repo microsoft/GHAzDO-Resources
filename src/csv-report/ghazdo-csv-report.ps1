@@ -87,7 +87,7 @@ foreach ($scan in $scans) {
     $repositoryId = $scan.RepoId
     $alerts = $null
     $parsedAlerts = $null
-    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryId            
+    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryId
     # Send out warnings for any org/project/repo that we cannot access alerts for!
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
@@ -97,8 +97,7 @@ foreach ($scan in $scans) {
             $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
-            if(!$enablement.advSecEnabled)
-            {
+            if (!$enablement.advSecEnabled) {
                 Write-Host "##vso[debug]Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName($repositoryId)"
             }
             else {
