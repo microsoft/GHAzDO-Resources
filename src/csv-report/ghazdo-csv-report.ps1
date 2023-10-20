@@ -77,11 +77,9 @@ else {
     }
 }
 
-
-
 #loop through repo alert list - https://learn.microsoft.com/en-us/rest/api/azure/devops/alert/alerts/list
 [System.Collections.ArrayList]$alertList = @()
-foreach ($scan in $scans) {   
+foreach ($scan in $scans) {
     $project = $scan.ProjectName
     $repositoryName = $scan.RepoName
     $repositoryId = $scan.RepoId
