@@ -21,7 +21,7 @@
     Only required if `scope` is set to "repository".
 .PARAMETER reportName
     The name of the csv report.
-    If not specified, the script will use the BUILD_BUILDNUMBER environment variable in the format "ghazdo-report-{BUILD_BUILDNUMBER}.csv".  This is also accessible via $(Build.BuildNumber) in Azure DevOps.  
+    If not specified, the script will use the BUILD_BUILDNUMBER environment variable in the format "ghazdo-report-{BUILD_BUILDNUMBER}.csv".  This is also accessible via $(Build.BuildNumber) in Azure DevOps.
 .PARAMETER scope
     The scope of the report. Valid values are "organization", "project", or "repository".
     If set to "organization", the script will run for all repositories in the organization.
