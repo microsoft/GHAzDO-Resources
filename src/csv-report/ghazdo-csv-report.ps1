@@ -5,53 +5,52 @@
     This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository.
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
     The script contains an SLA based on number of days since the alert was first seen. For critical it is 7 days, high is 30 days, medium is 90 days, and low is 180 days.
-.PARAMETER pass    
+.PARAMETER pat    
     The Azure DevOps Personal Access Token (PAT) with Advanced Security alert read permissions.
     If not specified, the script will require the MAPPED_ADO_PAT environment variable.
 .PARAMETER orgUri
     The URL of the Azure DevOps organization.
-    If not specified, the script will use the SYSTEM_COLLECTIONURI environment variable.
+    If not specified, the script will use the SYSTEM_COLLECTIONURI environment variable. This is also accessible via $(System.CollectionUri) in Azure DevOps.
 .PARAMETER project
     The name of the Azure DevOps project.
-    If not specified, the script will use the SYSTEM_TEAMPROJECT environment variable.
+    If not specified, the script will use the SYSTEM_TEAMPROJECT environment variable. This is also accessible via $(System.TeamProject) in Azure DevOps.
     Only required if allRepos is set to $false.
-.PARAMETER repositoryName
+.PARAMETER $repository
     The name of the Azure DevOps repository.
-    If not specified, the script will use the BUILD_REPOSITORY_NAME environment variable.
-    Only required if allRepos is set to $false.
+    If not specified, the script will use the BUILD_REPOSITORY_NAME environment variable. This is also accessible via $(Build.Repository.Name) in Azure DevOps.
+    Only required if `scope` is set to "repository".
 .PARAMETER reportName
     The name of the csv report.
-    If not specified, the script will use the BUILD_BUILDNUMBER environment variable or generate a default value.
-.PARAMETER allRepos
-    A boolean value that indicates whether to run the script for all repositories in the organization and project.
-    If set to $true, the script will run for all repositories. If set to $false, the script use the specified Organization/Project/Repository.
-    If not specified, the script will default to $true.
+    If not specified, the script will use the BUILD_BUILDNUMBER environment variable in the format "ghazdo-report-{BUILD_BUILDNUMBER}.csv".  This is also accessible via $(Build.BuildNumber) in Azure DevOps.  
+.PARAMETER scope
+    The scope of the report. Valid values are "organization", "project", or "repository".
+    If set to "organization", the script will run for all repositories in the organization.
+    If set to "project", the script will run for all repositories in the specified project.
+    If set to "repository", the script will run for the specified repository.
+    If not specified, the script will default to "organization".
 .EXAMPLE
     .\ghazdo-csv-report.ps1 `
-    -pass "myPersonalAccessToken" `
+    -pat "myPersonalAccessToken" `
     -orgUri "https://dev.azure.com/myOrganization" `
     -project "myProject" `
-    -repositoryName "myRepositoryName" `
+    -repository "myrepository" `
     -reportName "ghazdo-report-$(Get-Date -Format "yyyyMMdd").1.csv"
 .NOTES
-    This script requires the `pass` parameter to be set or the `MAPPED_ADO_PAT` environment variable to be set.
+    This script requires the `pat` parameter to be set or the `MAPPED_ADO_PAT` environment variable to be set.
 #>
 
 param(
-    [string]$pass = ${env:MAPPED_ADO_PAT},
-    #ADO: $(System.CollectionUri)
+    [string]$pat = ${env:MAPPED_ADO_PAT},
     [string]$orgUri = ${env:SYSTEM_COLLECTIONURI},
-    #ADO: $(System.TeamProject)
     [string]$project = ${env:SYSTEM_TEAMPROJECT},
-    #ADO: $(Build.Repository.Name)
-    [string]$repositoryName = ${env:BUILD_REPOSITORY_NAME},
-    #ADO: $(Build.BuildNumber)
+    [string]$repository = ${env:BUILD_REPOSITORY_NAME},
     [string]$reportName = "ghazdo-report-${env:BUILD_BUILDNUMBER}.csv",
-    [bool]$allRepos = $true
+    [ValidateSet("organization", "project", "repository")]
+    [string]$scope = "project"
 )
 
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
-$headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$pass")))"; }
+$headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$pat")))"; }
 $isAzDO = $env:TF_BUILD -eq "True"
 
 # Report Configuration
@@ -65,15 +64,19 @@ $severityDays = @{
     "low"      = 180
 }
 
-# get list of projects in the Organization
-$url = "https://dev.azure.com/{0}/_apis/projects" -f $orgName
-$projectsResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
-$projects = ($projectsResponse.Content | ConvertFrom-Json).value
-
-# create a hashtable to hold org name, project name and repo name
+# create empty array to hold org name, project name and repo name
 $scans = @()
-
-if ($allRepos) {
+if ($scope -in @("organization", "project")) {
+    $projects = if ($scope -eq "organization") {
+        # get list of projects in the Organization
+        $url = "https://dev.azure.com/{0}/_apis/projects" -f $orgName
+        $projectsResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
+        ($projectsResponse.Content | ConvertFrom-Json).value
+    }
+    elseif ($scope -eq "project") {
+        @(@{ name = $project })    
+    }
+     
     foreach ($proj in $projects) {
         $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories" -f $orgName, $proj.name
         $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
@@ -88,11 +91,11 @@ if ($allRepos) {
         }
     }
 }
-else {
+elseif ($scope -eq "repository") {
     $scans += @{
         OrgName     = $orgName
         ProjectName = $project
-        RepoName    = $repositoryName
+        RepoName    = $repository
     }
 }
 
@@ -100,32 +103,36 @@ else {
 [System.Collections.ArrayList]$alertList = @()
 foreach ($scan in $scans) {
     $project = $scan.ProjectName
-    $repositoryName = $scan.RepoName
+    $repository = $scan.RepoName
+    $alertUri = $orgUri + ('/' * ($orgUri[-1] -ne '/')) + [uri]::EscapeUriString($project + '/_git/' + $repository + '/alerts')
     $alerts = $null
     $parsedAlerts = $null
-    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repositoryName
+    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repository
     # Send out warnings for any org/project/repo that we cannot access alerts for!
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
         if ($alerts.StatusCode -ne 200) {
             # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/management/repo-enablement/get?view=azure-devops-rest-7.2
-            $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repositoryName
+            $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repository
             $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
-                Write-Host "$($isAzdo ? '##vso[debug]' : '')Advanced Security is not enabled for org:$orgName, project:$project, repo:$repositoryName"
+                Write-Host "$($isAzdo ? '##vso[debug]' : '')❌ - Advanced Security is not enabled for $alertUri"
+                continue;
             }
             else {
-                # 403 = Token has no permissions to view Advanced Security alerts
-                Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Error getting alerts from Azure DevOps Advanced Security: ", $alerts.StatusCode, $alerts.StatusDescription, $orgName, $project, $repositoryName
+                # 403 = Token has no permissions to view Advanced Security alerts or Repo has no source code
+                Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')❌ - Error $($alerts.StatusCode) $($alerts.StatusDescription) getting alerts from Azure DevOps Advanced Security for $alertUri"
+                continue;
             }
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "$($isAzdo ? '##vso[debug]' : '')Alerts(Count: $($parsedAlerts.Count)) loaded for org:$orgName, project:$project, repo:$repositoryName"
+        Write-Host "$($isAzdo ? '##vso[debug]' : '')✅ - Alerts(Count: $($parsedAlerts.Count)) loaded for $alertUri"
     }
     catch {
         Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
+        continue;
     }
 
     $alertList += foreach ($alert in $parsedAlerts.value) {
@@ -154,7 +161,7 @@ foreach ($scan in $scans) {
                 "Alert Link"       = "$($alert.repositoryUrl)/alerts/$($alert.alertId)"
                 "Organization"     = $orgName
                 "Project"          = $project
-                "Repository"       = $repositoryName
+                "Repository"       = $repository
                 "Ref"              = $alert.gitRef
                 "Ecosystem"        = if ($alert.logicalLocations) { ($alert.logicalLocations[0].fullyQualifiedName -split ' ')[0] } else { $null }
                 "Location Paths"   = ($alert | ForEach-Object { $_.physicalLocations | ForEach-Object { "$($_.filePath)$($_.region.lineStart ? ':' + $_.region.lineStart : '')$($_.versionControl.commitHash ? ' @ ' + $_.versionControl.commitHash.Substring(0, 8) : '')" } }) -join ","
@@ -169,11 +176,14 @@ if ($alertList.Count -gt 1) {
 }
 
 if ($alertList.Count -gt 0) {
-    $alertList | Format-Table -AutoSize | Out-String | Write-Host
+    #$alertList | Format-Table -AutoSize | Out-String | Write-Host
     $alertList | Export-Csv -Path "$([regex]::Replace($reportName, '[^\w\d.-]', ''))" -NoTypeInformation -Force
     if ($isAzdo) {
         Write-Host "##vso[artifact.upload artifactname=AdvancedSecurityReport]${env:BUILD_SOURCESDIRECTORY}/$reportName"
     }
+}
+else {
+    Write-Host "🤷 - No alerts found for at the scope:$scope ( org: $orgName$( $scope -in @('project','repository') ? ', project: ' + $project : '' )$( $scope -in @('repository') ? ', repository: ' + $repository : '' ))"
 }
 
 if ($isAzdo) {
