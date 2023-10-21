@@ -5,7 +5,7 @@
     This script retrieves the list of projects and repositories for a given organization, and then retrieves the list of Advanced Security alerts for each repository.
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
     The script contains an SLA based on number of days since the alert was first seen. For critical it is 7 days, high is 30 days, medium is 90 days, and low is 180 days.
-.PARAMETER pat    
+.PARAMETER pat
     The Azure DevOps Personal Access Token (PAT) with Advanced Security alert read permissions.
     If not specified, the script will require the MAPPED_ADO_PAT environment variable.
 .PARAMETER orgUri
@@ -74,9 +74,9 @@ if ($scope -in @("organization", "project")) {
         ($projectsResponse.Content | ConvertFrom-Json).value
     }
     elseif ($scope -eq "project") {
-        @(@{ name = $project })    
+        @(@{ name = $project })
     }
-     
+
     foreach ($proj in $projects) {
         $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories" -f $orgName, $proj.name
         $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
