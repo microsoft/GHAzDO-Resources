@@ -46,7 +46,7 @@ param(
     [string]$repository = ${env:BUILD_REPOSITORY_NAME},
     [string]$reportName = "ghazdo-report-${env:BUILD_BUILDNUMBER}.csv",
     [ValidateSet("organization", "project", "repository")]
-    [string]$scope = "project"
+    [string]$scope = "organization"
 )
 
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
@@ -118,11 +118,16 @@ foreach ($scan in $scans) {
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
-                Write-Host "$($isAzdo ? '##vso[debug]' : '')❌ - Advanced Security is not enabled for $alertUri"
+                Write-Host "$($isAzdo ? '##vso[debug]' : '')⚠️ - Advanced Security is not enabled for $alertUri"
+                continue;
+            }
+            elseif ($alerts.StatusCode -eq 404) {
+                # 404 = Repo has no source code
+                Write-Host "$($isAzdo ? '##vso[debug]' : '')⚠️ - Repo is empty for $alertUri"
                 continue;
             }
             else {
-                # 403 = Token has no permissions to view Advanced Security alerts or Repo has no source code
+                # 403 = Token has no permissions to view Advanced Security alerts 
                 Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')❌ - Error $($alerts.StatusCode) $($alerts.StatusDescription) getting alerts from Azure DevOps Advanced Security for $alertUri"
                 continue;
             }
@@ -131,7 +136,7 @@ foreach ($scan in $scans) {
         Write-Host "$($isAzdo ? '##vso[debug]' : '')✅ - Alerts(Count: $($parsedAlerts.Count)) loaded for $alertUri"
     }
     catch {
-        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
+        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
         continue;
     }
 
