@@ -127,7 +127,7 @@ foreach ($scan in $scans) {
                 continue;
             }
             else {
-                # 403 = Token has no permissions to view Advanced Security alerts 
+                # 403 = Token has no permissions to view Advanced Security alerts
                 Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')❌ - Error $($alerts.StatusCode) $($alerts.StatusDescription) getting alerts from Azure DevOps Advanced Security for $alertUri"
                 continue;
             }
