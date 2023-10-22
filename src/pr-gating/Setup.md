@@ -27,6 +27,8 @@
 
 - Setup [build verification for your main branch](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#build-validation). Pick the CIVerify pipeline, you can keep the rest of the default settings.
 
+<img width="800" alt="buildpolicy" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/74801e80-46e1-4d05-97b1-5f11396330e1">
+
 
 - Figure out a way to test your new setup without adding any bad code to your main branch :) 
 
