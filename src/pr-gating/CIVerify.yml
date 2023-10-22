@@ -1,0 +1,46 @@
+# This is a starter pipeline to handle Gated PRs using GHAzDO. Currently (October 2023) this is not supported out of the box by the product, 
+# it probably will be supported in the future, this project can be used as a workaround until that time. 
+# We want to restrict new code going into main and only allow PRs if the new code does not introduce any new CodeQL issues. 
+# The idea is to set a branch protection policy (for main), forcing this pipeline to succeed before a PR into main can happen. 
+# The pipeline will run CodeQL on the source branch of the PR. Later, using a PowerShell script, the CodeQL issues of the PR source and target will be compared. 
+# If there are issues in the PR source that are not in main, this pipeline will fail. 
+#
+# If new alerts are detected these needs to be analysed using the regular Advanced Security Code Scanning UI. Set the filter to the pr branch and fix or dissmiss all the new issue. 
+# After that, the PR check CIVerify can be requeued in the PR. Hopefully this time, without any issues. 
+# 
+# The script needs a PAT to run (for accessing the REST API). This PAT should be setup as a secret variable for the pipleline (name: GATING_PAT). 
+# The PAT needs the access right - Advanced Security - Read
+#
+# More on ADO build verifications: https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#build-validation 
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+  
+# Variables for CodeQL
+variables:
+  SourcesFolder: src\main
+   
+
+steps:
+# Run CodeQL on this branch (source branch of the PR) 
+- task: AdvancedSecurity-Codeql-Init@1
+  inputs:
+    languages: 'javascript'
+    querysuite: 'code-scanning'
+
+- task: AdvancedSecurity-Codeql-Autobuild@1
+- task: AdvancedSecurity-Codeql-Analyze@1
+- task: AdvancedSecurity-Publish@1
+
+# Compair CodeQL issues on the PR source branch and main. 
+# Fail if there are new issues.  
+- task: PowerShell@2
+  displayName: 'CI Gating - verify there are no new CodeQL issues introduced in this PR'
+  inputs:
+    targetType: filePath
+    filePath: CIGate.ps1
+  env:
+    MAPPED_ADO_PAT: $(GATING_PAT)
