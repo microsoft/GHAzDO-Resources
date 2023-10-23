@@ -68,7 +68,7 @@ $severityDays = @{
     "low"      = 180
 }
 
-# create empty array to hold org name, project name and repo name
+#build the list of repos to scan
 $scans = @()
 if ($scope -in @("organization", "project")) {
     $projects = if ($scope -eq "organization") {
