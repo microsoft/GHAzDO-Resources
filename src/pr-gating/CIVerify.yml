@@ -33,7 +33,6 @@ steps:
 
 - task: AdvancedSecurity-Codeql-Autobuild@1
 - task: AdvancedSecurity-Codeql-Analyze@1
-- task: AdvancedSecurity-Publish@1
 
 # Compair CodeQL issues on the PR source branch and main. 
 # Fail if there are new issues.  
