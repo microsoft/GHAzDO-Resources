@@ -181,7 +181,7 @@ if ($alertList.Count -gt 1) {
 }
 
 if ($alertList.Count -gt 0) {
-    $reportName = [regex]::Replace($reportName, '[^\w\d.-]', '')    
+    $reportName = [regex]::Replace($reportName, '[^\w\d.-]', '')
     $reportPath = [System.IO.Path]::Combine($isAzDO ? ${env:BUILD_ARTIFACTSTAGINGDIRECTORY} : $pwd, $reportName)
     #$alertList | Format-Table -AutoSize | Out-String | Write-Host
     $alertList | Export-Csv -Path "$reportPath" -NoTypeInformation -Force
@@ -191,7 +191,6 @@ if ($alertList.Count -gt 0) {
     else {
         Write-Host "📄 - Report generated at $reportPath"
     }
-
 }
 else {
     Write-Host "🤷 - No alerts found for at the scope:$scope ( org: $orgName$( $scope -in @('project','repository') ? ', project: ' + $project : '' )$( $scope -in @('repository') ? ', repository: ' + $repository : '' ))"
