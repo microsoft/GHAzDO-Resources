@@ -6,7 +6,7 @@
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
     The script contains an SLA based on number of days since the alert was first seen. For critical it is 7 days, high is 30 days, medium is 90 days, and low is 180 days.
 .PARAMETER pat
-    The Azure DevOps Personal Access Token (PAT) with Advanced Security alert read permissions.
+    The Azure DevOps Personal Access Token (PAT) with Advanced Security=READ and Code=READ (to look up repositories for scope="organization" or scope="project") permissions.
     If not specified, the script will require the MAPPED_ADO_PAT environment variable.
 .PARAMETER orgUri
     The URL of the Azure DevOps organization.
@@ -48,6 +48,10 @@ param(
     [ValidateSet("organization", "project", "repository")]
     [string]$scope = "organization"
 )
+
+if ([string]::IsNullOrEmpty($pat)) {
+    throw "The `pat` parameter must be set or the `MAPPED_ADO_PAT` environment variable must be set."
+}
 
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
 $headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$pat")))"; }
