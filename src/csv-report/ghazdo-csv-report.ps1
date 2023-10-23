@@ -118,12 +118,12 @@ foreach ($scan in $scans) {
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
-                Write-Host "$($isAzdo ? '##vso[debug]' : '')⚠️ - Advanced Security is not enabled for $alertUri"
+                Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Advanced Security is not enabled for $alertUri"
                 continue;
             }
             elseif ($alerts.StatusCode -eq 404) {
                 # 404 = Repo has no source code
-                Write-Host "$($isAzdo ? '##vso[debug]' : '')⚠️ - Repo is empty for $alertUri"
+                Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Repo is empty for $alertUri"
                 continue;
             }
             else {
@@ -133,7 +133,7 @@ foreach ($scan in $scans) {
             }
         }
         $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "$($isAzdo ? '##vso[debug]' : '')✅ - Alerts(Count: $($parsedAlerts.Count)) loaded for $alertUri"
+        Write-Host "$($isAzdo ? '##[debug]' : '')✅ - Alerts(Count: $($parsedAlerts.Count)) loaded for $alertUri"
     }
     catch {
         Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
@@ -181,11 +181,17 @@ if ($alertList.Count -gt 1) {
 }
 
 if ($alertList.Count -gt 0) {
+    $reportName = [regex]::Replace($reportName, '[^\w\d.-]', '')    
+    $reportPath = [System.IO.Path]::Combine($isAzDO ? ${env:BUILD_ARTIFACTSTAGINGDIRECTORY} : $pwd, $reportName)
     #$alertList | Format-Table -AutoSize | Out-String | Write-Host
-    $alertList | Export-Csv -Path "$([regex]::Replace($reportName, '[^\w\d.-]', ''))" -NoTypeInformation -Force
+    $alertList | Export-Csv -Path "$reportPath" -NoTypeInformation -Force
     if ($isAzdo) {
-        Write-Host "##vso[artifact.upload artifactname=AdvancedSecurityReport]${env:BUILD_SOURCESDIRECTORY}/$reportName"
+        Write-Host "##vso[artifact.upload artifactname=AdvancedSecurityReport]$reportPath"
     }
+    else {
+        Write-Host "📄 - Report generated at $reportPath"
+    }
+
 }
 else {
     Write-Host "🤷 - No alerts found for at the scope:$scope ( org: $orgName$( $scope -in @('project','repository') ? ', project: ' + $project : '' )$( $scope -in @('repository') ? ', repository: ' + $repository : '' ))"
