@@ -1,0 +1,8 @@
+ # add Reporting Task
+ - task: PowerShell@2
+      displayName: 'Generate a csv report based on Advanced Security alerts'
+      inputs:
+        targetType: filePath
+        filePath: ghazdo-csv-report.ps1
+      env: 
+        MAPPED_ADO_PAT: $(reporting-pat)
