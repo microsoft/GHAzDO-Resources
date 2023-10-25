@@ -26,6 +26,7 @@
   Find your new pipeline in the ADO UI, [rename it](https://learn.microsoft.com/en-us/azure/devops/pipelines/customize-pipeline?view=azure-devops#pipeline-settings) to CIVerify.
 
 - Setup [build verification for your main branch](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#build-validation). Pick the CIVerify pipeline. If your developers does not have access rights to dissmiss alerts it is a good idea to set this check to optional. That way, a PR can happen even if the alert is a false possitive. The rest of the settings can be keep as their default settings.
+Optionaly, if you have more branches that should be protected, you can setup the same check for those branches. 
 
 <img width="800" alt="buildpolicy" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/74801e80-46e1-4d05-97b1-5f11396330e1">
 
