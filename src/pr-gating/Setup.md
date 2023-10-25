@@ -36,7 +36,7 @@ Optionaly, if you have more branches that should be protected, you can setup the
 ## Possible customizations
 - The CodeQL language (javascript) is hardcoded in CIVerify.yml. GHAzDO settings will need to be updated to match your needs. 
 - The CI Verification could be extended to also (or only) check new Dependency alerts. The same strategy could be used but tweaks would have to be done to both CIVerify.yml and CIGate.ps1. 
-One complication to concider if you want to use the same strategy for dependency scanning. It could be that the reason we see new issues reported is that the advisory database has been extended since the last scan of main. That is, the new additions in the PR is not the issue but rather that this scan is the first one after an extention of the known vunarabilities. Still, since the alerts can be dismissed in the PR branch, or a new scan can be run on the main branch, I think this is acceptable. 
+One complication to concider if you want to use the same strategy for dependency scanning. It could be that the reason we see new issues reported is that the advisory database has been extended since the last scan of main. That is, the new additions in the PR is not the issue but rather that this scan is the first one after an extention of the known vunarabilities. Still, since the alerts can be dismissed in the PR branch, the branch policy check can be setup as optional, or a new scan can be run on the main branch, I think this is acceptable. 
 
 
    
