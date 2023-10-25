@@ -29,7 +29,6 @@ steps:
 - task: AdvancedSecurity-Codeql-Init@1
   inputs:
     languages: 'javascript'
-    querysuite: 'code-scanning'
 
 - task: AdvancedSecurity-Codeql-Autobuild@1
 - task: AdvancedSecurity-Codeql-Analyze@1
