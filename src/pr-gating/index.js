@@ -31,10 +31,6 @@ app.get('/', (req, res) => {
   res.status(200).send(JSON.stringify({ name: version.getName(), version: version.getVersion() }));
 });
 
-app.get('/mybadcode', (req, res) => {
-  res.sendFile('form.html', { root: __dirname });
-});
-
 // Route - user search
 app.get("/users", function (req, res) {
   let search = "%";
