@@ -61,7 +61,7 @@ if($newAlertIds.length -gt 0) {
             Write-Host  ""
             Write-Host  "##vso[task.logissue type=error;sourcepath=$($prAlert.physicalLocations.filePath);linenumber=$($prAlert.physicalLocations.region.lineStart);columnnumber=$($prAlert.physicalLocations.region.columnStart)] New $alertType alert detected #$($prAlert.alertId) : $($prAlert.title)."
             Write-Host  "##[error] Fix or dismiss this new alert in the Advanced Security UI for pr branch $($prSourceBranch)."
-            $urlAlert = "https://dev.azure.com/{0}/_git/{1}/alerts/{2}?branch={3}" -f $orgName, $project, $prAlert.alertId, $prSourceBranch
+            $urlAlert = "https://dev.azure.com/{0}/{1}/_git/{2}/alerts/{3}?branch={4}" -f $orgName, $project, $repositoryId, $prAlert.alertId, $prSourceBranch
             Write-Host  "##[error] Details for this new alert:  $($urlAlert)"
         }
     }
