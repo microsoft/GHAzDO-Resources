@@ -13,8 +13,8 @@ $base64 = [System.Convert]::ToBase64String($bytes)
 $basicAuthValue = "Basic $base64"
 $headers = @{ Authorization = $basicAuthValue }
 
-$urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/AdvancedSecurity/Repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType=3&criteria.branchName={3}&criteria.onlyDefaultBranchAlerts=true&useDatabaseProvider=true" -f $orgName, $project, $repositoryId, $prTargetBranch
-$urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{1}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
+$urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/Repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType=3&criteria.branchName={3}&criteria.onlyDefaultBranchAlerts=true&useDatabaseProvider=true" -f $orgName, $project, $repositoryId, $prTargetBranch
+$urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
 
 Write-Host "Will check to see if there are any new CodeQL issues in this PR branch" 
 Write-Host "PR source : $($prSourceBranch). PR target: $($prTargetBranch)"
