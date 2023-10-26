@@ -13,10 +13,12 @@ $base64 = [System.Convert]::ToBase64String($bytes)
 $basicAuthValue = "Basic $base64"
 $headers = @{ Authorization = $basicAuthValue }
 
-$urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/Repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType=3&criteria.branchName={3}&criteria.onlyDefaultBranchAlerts=true&useDatabaseProvider=true" -f $orgName, $project, $repositoryId, $prTargetBranch
-$urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
+$alertType = "" # code,dependency,secret - If provided, only return alerts of this type. Otherwise, return alerts of all types.
 
-Write-Host "Will check to see if there are any new CodeQL issues in this PR branch" 
+$urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/Repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType={4}&criteria.branchName={3}&criteria.onlyDefaultBranchAlerts=true&useDatabaseProvider=true" -f $orgName, $project, $repositoryId, $prTargetBranch, $alertType
+$urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=5000&orderBy=lastSeen&criteria.alertType={4}&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch, $alertType
+
+Write-Host "Will check to see if there are any new $alertType alerts in this PR branch" 
 Write-Host "PR source : $($prSourceBranch). PR target: $($prTargetBranch)"
 
 if (${env:BUILD_REASON} -ne 'PullRequest'){
@@ -57,7 +59,7 @@ if($newAlertIds.length -gt 0) {
         if ($newAlertIds -contains $prAlert.alertId) {
             # This is a new Alert for this PR. Log and report it.
             Write-Host  ""
-            Write-Host  "##vso[task.logissue type=error;sourcepath=$($prAlert.physicalLocations.filePath);linenumber=$($prAlert.physicalLocations.region.lineStart);columnnumber=$($prAlert.physicalLocations.region.columnStart)] New CodeQL issue detected #$($prAlert.alertId) : $($prAlert.title)."
+            Write-Host  "##vso[task.logissue type=error;sourcepath=$($prAlert.physicalLocations.filePath);linenumber=$($prAlert.physicalLocations.region.lineStart);columnnumber=$($prAlert.physicalLocations.region.columnStart)] New $alertType alert detected #$($prAlert.alertId) : $($prAlert.title)."
             Write-Host  "##[error] Fix or dismiss this new alert in the Advanced Security UI for pr branch $($prSourceBranch)."
             $urlAlert = "https://dev.azure.com/{0}/_git/{1}/alerts/{2}?branch={3}" -f $orgName, $project, $prAlert.alertId, $prSourceBranch
             Write-Host  "##[error] Details for this new alert:  $($urlAlert)"
@@ -65,7 +67,7 @@ if($newAlertIds.length -gt 0) {
     }
     Write-Host
     Write-Host "##[error] Please review these Code Scanning alerts for the $($prBranch) branch using the regular Advanced Security UI" 
-    Write-Host "##[error] Dissmiss or fix the issues listed and try re-queue the CIVerify task."
+    Write-Host "##[error] Dissmiss or fix the alerts listed and try re-queue the CIVerify task."
     exit 1
 } else {
     Write-Output "No new CodeQL alerts - all is fine"
