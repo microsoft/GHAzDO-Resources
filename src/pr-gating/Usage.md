@@ -15,25 +15,22 @@ Save the file and create a new Pull Request from the new branch into main.
 
 The CIVerify pipeline will run as part of the checks for this PR. This check will fail and issues with the new code will be reported.
 
-<img width="800" alt="1check" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/300c4794-a709-4340-acef-a134a6556e58">
+<img width="800" alt="CIVerify fail" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/99dbf004-7d45-4d53-a6a5-8a9027ac980c">
 
+An annotation has also been added to the file that contains the CodeQL issue. 
 
-Clicking the error will bring you to the CIVerify Pipeline run. You will see two errors listed for the Pipeline. One referencing to the new bad code, one just noting that CIVerify failed. 
+<img width="800" alt="PR annotation" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/4a3d1a1b-722d-4596-889e-ab3190350ae4">
 
-<img width="800" alt="2errorlogs" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/2dcb1ca7-13f4-4a96-872b-e83a1b9381a4">
+The annotation will be in the name of the person that created the PAT that is being used by the pipeline (GHAZDO_PRGATING_PAT). 
+Open the 'See details here' link and review the alert. 
 
+In most scenarios, the best option will be to fix the code so that the alert disapears. If this is a false possitive and you have the access rights, you can dismiss the alert. 
 
-Open up the logs for the first error. You will be able to see the CodeQL error message, alert id and also have a link to the new alert that was detected. 
+<img width="800" alt="Alert review" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/caad17cd-9c3d-431a-9045-ad681bbc8da8">
 
-<img width="800" alt="3logtext" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/7f634b98-d34a-4b40-ae9e-37f4cfb61fc4">
+You should also close the comment that was added to the PR.
 
-
-Select the link and jump to the new alert.  Review the alert, fix or dismiss this alert. 
-
-
-<img width="800" alt="ReviewCloseAlert" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/b7ec3938-a1cf-4001-9e6d-59c62bfdc873">
-
-
+<img width="800" alt="Close comment" src="https://github.com/microsoft/GHAzDO-Resources/assets/106392052/9a75487a-6ce0-4962-ae57-4c0708bc8f9b">
 
 Re-queue the CIVerify check again in the PR. 
 This time the check should pass with not issue.    
