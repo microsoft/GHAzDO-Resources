@@ -1,5 +1,6 @@
 # This script is used as part of our PR gating strategy. It takes advantage of the GHAzDO REST API to check for CodeQL issues a PR source and target branch. 
-# If there are new issues in the source branch, the script will report on that and fail with error code 1. 
+# If there are 'new' issues in the source branch, the script will fail with error code 1. 
+# The script will also log errors, 1 per new CodeQL alert, it will also add PR annotations for the alert
 $pass = ${env:MAPPED_ADO_PAT}
 $orgUri = ${env:SYSTEM_COLLECTIONURI}
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
@@ -7,6 +8,8 @@ $project = ${env:SYSTEM_TEAMPROJECT}
 $repositoryId = ${env:BUILD_REPOSITORY_ID} 
 $prTargetBranch = ${env:SYSTEM_PULLREQUEST_TARGETBRANCH}
 $prSourceBranch = ${env:BUILD_SOURCEBRANCH}
+$prId = ${env:SYSTEM_PULLREQUEST_PULLREQUESTID}
+$prInteration  = ${env:SYSTEM_PULLREQUEST_PULLREQUESTITERATION}
 $pair = ":${pass}"
 $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
 $base64 = [System.Convert]::ToBase64String($bytes)
@@ -15,6 +18,68 @@ $headers = @{ Authorization = $basicAuthValue }
 
 $urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prTargetBranch
 $urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
+$urlComment =   "https://dev.azure.com/{0}/{1}/_apis/git/repositories/{2}/pullRequests/{3}/threads?api-version=7.1-preview.1" -f $orgName, $project, $repositoryId, $prId
+$urlIteration = "https://dev.azure.com/{0}/{1}/_apis/git/repositories/{2}/pullRequests/{3}/iterations/{4}/changes?api-version=7.1-preview.1&`$compareTo={5}" -f $orgName, $project, $repositoryId, $prId, $prInteration, ($prInteration-1) 
+
+#Get-ChildItem Env: | Format-Table -AutoSize
+
+# Add a PR annotations for the Alert in the changed file. 
+function AddPRComment($prAlert, $urlAlert) {
+    # Get Pull Request iterations, we need this to map the file to a changeTrackingId
+    $prIterations = Invoke-RestMethod -Uri $urlIteration -Method Get -Headers $headers
+   
+    # Find the changeTrackingId mapping to the file with the CodeQL alert
+    $iterationItem = $prIterations.changeEntries | Where-Object { $_.item.path -like "/$($prAlert.physicalLocations[-1].filePath)" } | Select-Object -First 1
+
+    # Any change to the file with the CodeQL alert in this PR iteration?
+    if ($null -eq $iterationItem) {
+        Write-Host "In this iteration of the PR, there is no change to the file with the CodeQL alert. "
+        return
+    }
+
+    # Define the Body hashtable
+    $body = @{
+        "comments" = @(
+            @{
+                "content" = "**$($prAlert.title)**
+                $($prAlert.tools.rules.description)
+                See details [here]($($urlAlert))"
+                "commentType" = 1
+            }
+        )
+        "status" = 1
+        "threadContext" = @{
+            "filePath" = "./$($prAlert.physicalLocations[-1].filePath)"
+            "rightFileStart" = @{
+                "line" = $($prAlert.physicalLocations[-1].region.lineStart)
+                "offset" = $($prAlert.physicalLocations[-1].region.columnStart)
+            }
+            "rightFileEnd" = @{
+                "line" = $($prAlert.physicalLocations[-1].region.lineEnd)
+                "offset" = $($prAlert.physicalLocations[-1].region.columnEnd)
+            }
+        }
+        "pullRequestThreadContext" = @{
+            "changeTrackingId" = $($iterationItem.changeTrackingId)
+            "iterationContext" = @{
+                "firstComparingIteration" = $($prInteration)
+                "secondComparingIteration" = $($prInteration)
+              }
+        }
+    }
+
+    # Convert the hashtable to a JSON string
+    $bodyJson = $body | ConvertTo-Json -Depth 10
+
+    # Print the JSON string
+    #Write-Output $bodyJson
+
+    # Send the POST request
+    $response = Invoke-RestMethod -Uri $urlComment -Method Post -Headers $headers -Body $bodyJson -ContentType "application/json"
+
+    #Write-Output $response
+
+}
 
 Write-Host "Will check to see if there are any new CodeQL issues in this PR branch" 
 Write-Host "PR source : $($prSourceBranch). PR target: $($prTargetBranch)"
@@ -57,10 +122,12 @@ if($newAlertIds.length -gt 0) {
         if ($newAlertIds -contains $prAlert.alertId) {
             # This is a new Alert for this PR. Log and report it.
             Write-Host  ""
-            Write-Host  "##vso[task.logissue type=error;sourcepath=$($prAlert.physicalLocations.filePath);linenumber=$($prAlert.physicalLocations.region.lineStart);columnnumber=$($prAlert.physicalLocations.region.columnStart)] New $alertType alert detected #$($prAlert.alertId) : $($prAlert.title)."
+            Write-Host  "##vso[task.logissue type=error;sourcepath=$($prAlert.physicalLocations[-1].filePath);linenumber=$($prAlert.physicalLocations[-1].region.lineStart);columnnumber=$($prAlert.physicalLocations[-1].region.columnStart)] New $alertType alert detected #$($prAlert.alertId) : $($prAlert.title)."
             Write-Host  "##[error] Fix or dismiss this new alert in the Advanced Security UI for pr branch $($prSourceBranch)."
             $urlAlert = "https://dev.azure.com/{0}/{1}/_git/{2}/alerts/{3}?branch={4}" -f $orgName, $project, $repositoryId, $prAlert.alertId, $prSourceBranch
             Write-Host  "##[error] Details for this new alert:  $($urlAlert)"
+
+            AddPRComment $prAlert $urlAlert
         }
     }
     Write-Host
