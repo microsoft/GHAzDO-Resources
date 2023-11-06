@@ -3,6 +3,7 @@
       displayName: 'Generate a csv report based on Advanced Security alerts'
       inputs:
         targetType: filePath
+        # use the filePath to point to a local copy of the PowerShell script in your repository
         filePath: ghazdo-csv-report.ps1
       env: 
         MAPPED_ADO_PAT: $(reporting-pat)
