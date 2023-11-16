@@ -1,0 +1,112 @@
+{
+    "id": "73DD5DA0-65EA-47E9-A7D2-F972C6F781B1",
+    "name": "UseCodeQLVersion",
+    "friendlyName": "Use CodeQL version",
+    "description": "Install and use the specified version of CodeQL from the tool cache, optionally adding it to the PATH",
+    "helpUrl": "aka.ms/useCodeQLTask",
+    "helpMarkDown": "[Learn more about this task](aka.ms/useCodeQLTask) or [see the CodeQL documentation](https://codeql.github.com/docs/)",
+    "category": "Tool",
+    "runsOn": [
+        "Agent",
+        "DeploymentGroup"
+    ],
+    "author": "GHAzDOPreview",
+    "minimumAgentVersion": "2.182.1",
+    "version": {
+        "Major": 0,
+        "Minor": 1,
+        "Patch": 0
+    },
+    "demands": [],
+    "instanceNameFormat": "Use CodeQL $(versionSpec)",
+    "groups": [
+        {
+            "name": "advanced",
+            "displayName": "Advanced",
+            "isExpanded": false
+        }
+    ],
+    "inputs": [
+        {
+            "name": "versionSpec",
+            "type": "string",
+            "label": "Version spec",
+            "required": true,
+            "defaultValue": "latest",
+            "helpMarkDown": "CodeQL Bundle release to install, or latest"
+        },
+        {
+            "name": "disableDownloadFromRegistry",
+            "type": "boolean",
+            "label": "Disable downloading releases from the GitHub registry",
+            "required": false,
+            "defaultValue": "false",
+            "helpMarkDown": "Whether to disable downloading missing CodeQL Bundles from the [Github](https://github.com/github/codeql-action/releases). Check this if you only want to use local pre-installed CodeQL."
+        },
+        {
+            "name": "allowUnstable",
+            "type": "boolean",
+            "label": "Allow downloading unstable releases",
+            "required": false,
+            "defaultValue": "false",
+            "helpMarkDown": "Allow downloading unstable CodeQL Bundle releases from [Github CodeQL Bundle releases](https://github.com/github/codeql-action/releases).",
+            "visibleRule": "disableDownloadFromRegistry = false"
+        },
+        {
+            "name": "githubToken",
+            "type": "string",
+            "label": "GitHub token for CodeQL Bundle Download",
+            "required": false,
+            "helpMarkDown": "GitHub token is needed to prevent anonymous requests limit to the [Github CodeQL Bundle releases](https://github.com/github/codeql-action/releases). Leaving this empty may cause download failures. Not needed if you only use locally installed CodeQL.",
+            "visibleRule": "disableDownloadFromRegistry = false"
+        },
+        {
+            "name": "addToPath",
+            "type": "boolean",
+            "label": "Add to PATH",
+            "required": true,
+            "defaultValue": "true",
+            "helpMarkDown": "Whether to prepend the retrieved CodeQL version to the PATH environment variable to make it available in subsequent tasks or scripts without using the output variable."
+        }
+    ],
+    "outputVariables": [
+        {
+            "name": "codeQLLocation",
+            "description": "The directory of the installed CodeQL bundle. Use this in subsequent tasks to access this installation of CodeQL."
+        }
+    ],
+    "execution": {
+        "Node10": {
+            "target": "main.js",
+            "argumentFormat": ""
+        },
+        "Node16": {
+            "target": "main.js",
+            "argumentFormat": ""
+        }
+    },
+    "messages": {
+        "ListAvailableVersions": "Versions in %s:",
+        "PlatformNotRecognized": "Platform not recognized",
+        "PrependPath": "Prepending PATH environment variable with directory: %s",
+        "ToolNotFoundMicrosoftHosted": "If this is a Microsoft-hosted agent, check that this image supports side-by-side versions of %s at %s.",
+        "ToolNotFoundSelfHosted": "If this is a self-hosted agent, see how to configure side-by-side %s versions at %s.",
+        "VersionNotFound": "Version spec %s for architecture %s did not match any version in Agent.ToolsDirectory.",
+        "ExactVersionNotRecommended": "Specifying an exact version is not recommended on Microsoft-Hosted agents. Versions of the CodeQL Bundle can be replaced by new ones on Hosted agents without notice, which will cause builds to fail unexpectedly. It is recommended to specify only major or major and minor version (Example: `2` or `2.15`)",
+        "MissingGithubToken": "You should provide GitHub token if you want to download a CodeQL release. Otherwise you may hit the GitHub anonymous download limit.",
+        "DownloadNotFound": "Could not find CodeQL matching spec %s (%s) in the codeql-actions repository. Also, proxy is not supported.",
+        "ManifestDownloadFailed": "Failed to download CodeQL versions manifest from the Github Actions CodeQL registry (https://github.com/github/codeql-action/releases). Invalid GitHub token could cause this.",
+        "DownloadFailed": "Failed to download CodeQL from the Github CodeQL registry (https://github.com/github/codeql-action/releases). Error: %s"
+    },
+    "restrictions": {
+        "commands": {
+            "mode": "restricted"
+        },
+        "settableVariables": {
+            "allowed": [
+                "codeQLLocation",
+                "PATH"
+            ]
+        }
+    }
+}
