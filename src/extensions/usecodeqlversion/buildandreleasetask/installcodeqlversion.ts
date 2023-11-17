@@ -1,3 +1,5 @@
+
+import * as fs from "fs";
 import * as os from 'os';
 import * as path from 'path';
 import * as semver from 'semver';
@@ -7,6 +9,7 @@ import * as tool from 'azure-pipelines-tool-lib/tool';
 
 import { getPlatform, Platform } from './taskutil';
 import { TaskParameters, CodeQLRelease, CodeQLBundleAsset } from './interfaces';
+import { tinyGuid } from 'azure-pipelines-tasks-utility-common/tinyGuidUtility'
 
 const MANIFEST_URL = 'https://api.github.com/repos/github/codeql-action/releases';
 
@@ -19,18 +22,7 @@ const MANIFEST_URL = 'https://api.github.com/repos/github/codeql-action/releases
 export async function installCodeQLVersion(versionSpec: string, parameters: TaskParameters) {
     const CodeQLInstallerDir: string = await downloadCodeQLVersion(versionSpec, parameters);
 
-    task.debug(`Extracted CodeQL archive to ${CodeQLInstallerDir}; running installation script`);
-
-    const installerScriptOptions = {
-        cwd: CodeQLInstallerDir,
-        windowsHide: true
-    };
-
-    if (os.platform() === 'win32') {
-        return task.exec('powershell', './setup.ps1', installerScriptOptions);
-    } else {
-        return task.exec('bash', './setup.sh', installerScriptOptions);
-    }
+    task.debug(`Extracted CodeQL archive to ${CodeQLInstallerDir}`);
 }
 
 /**
@@ -70,14 +62,25 @@ async function downloadCodeQLVersion(versionSpec: string, parameters: TaskParame
 
     task.debug(`Found matching file for system: ${matchingCodeQLFile.name}`);
 
-    const CodeQLArchivePath: string = await tool.downloadTool(matchingCodeQLFile.url, matchingCodeQLFile.name, null, additionalHeaders);
+    const CodeQLArchivePath: string = await tool.downloadTool(matchingCodeQLFile.browser_download_url, matchingCodeQLFile.name, null, additionalHeaders);
 
     task.debug(`Downloaded CodeQL archive to ${CodeQLArchivePath}`);
 
-    if (path.extname(CodeQLArchivePath) === '.zip') {
-        return tool.extractZip(CodeQLArchivePath);
-    } else {
-        return tool.extractTar(CodeQLArchivePath);
+    // Extract
+    var installationPath = path.join(task.getVariable('Agent.ToolsDirectory'), "CodeQL", versionSpec, os.arch());
+    task.mkdirP(installationPath)
+    console.log(task.loc("ExtractingPackage", CodeQLArchivePath));
+    try {
+        let tempDirectory = task.getVariable('Agent.TempDirectory');
+        let extDirectory = path.join(tempDirectory, tinyGuid());
+        var extPath = (path.extname(CodeQLArchivePath) === '.zip') ? await tool.extractZip(CodeQLArchivePath, installationPath) : await tool.extractTar(CodeQLArchivePath,installationPath);
+        task.writeFile(path.join(installationPath, 'pinned-version'), '');
+        task.writeFile(installationPath + '.complete', '');
+        return extPath;
+    }
+    catch (ex) {
+        throw task.loc("FailedWhileExtractingPackage", ex);
+        return '';
     }
 }
 

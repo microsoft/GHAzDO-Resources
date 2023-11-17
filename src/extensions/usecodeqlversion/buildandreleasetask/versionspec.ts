@@ -1,8 +1,10 @@
-import * as semver from 'semver';
-
-
 export function codeQLVersionToSemantic(versionSpec: string) {
-    return versionSpec
+    if (versionSpec === 'latest') {
+        return '*';
+    }
+    else {
+        return versionSpec
+    }
 }
 
 /**

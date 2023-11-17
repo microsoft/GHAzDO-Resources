@@ -1,0 +1,36 @@
+{
+    "manifestVersion": 1,
+    "id": "advancedsecurity-codeql-installer-task",
+    "name": "CodeQL Automatic Installer Task",
+    "version": "0.1.4",
+    "publisher": "GHAzDOPreview",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],    
+    "description": "CodeQLInstaller",
+    "categories": [
+        "Azure Pipelines"
+    ],
+    "icons": {
+        "default": "images/icon.png"        
+    },
+    "files": [
+        {
+            "path": "buildandreleasetask"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "custom-build-release-task",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "buildandreleasetask"
+            }
+        }
+    ]
+}

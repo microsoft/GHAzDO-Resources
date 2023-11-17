@@ -15,7 +15,7 @@
     "version": {
         "Major": 0,
         "Minor": 1,
-        "Patch": 0
+        "Patch": 4
     },
     "demands": [],
     "instanceNameFormat": "Use CodeQL $(versionSpec)",
@@ -33,7 +33,7 @@
             "label": "Version spec",
             "required": true,
             "defaultValue": "latest",
-            "helpMarkDown": "CodeQL Bundle release to install, or latest"
+            "helpMarkDown": "CodeQL Bundle release version to install, or latest"
         },
         {
             "name": "disableDownloadFromRegistry",

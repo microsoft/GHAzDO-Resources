@@ -1,15 +1,9 @@
 import * as os from 'os';
-import * as path from 'path';
-
-import * as semver from 'semver';
-
 import * as task from 'azure-pipelines-task-lib/task';
 import * as tool from 'azure-pipelines-tool-lib/tool';
-
 import { Platform } from './taskutil';
 import { installCodeQLVersion } from './installcodeqlversion';
 import * as toolUtil  from './toolutil';
-
 import { codeQLVersionToSemantic, isExactVersion } from './versionspec';
 import { TaskParameters } from './interfaces';
 
