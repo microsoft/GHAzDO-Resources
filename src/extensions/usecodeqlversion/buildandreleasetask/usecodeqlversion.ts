@@ -1,14 +1,15 @@
 import * as os from 'os';
 import * as task from 'azure-pipelines-task-lib/task';
 import * as tool from 'azure-pipelines-tool-lib/tool';
-import { Platform } from './taskutil';
 import { installCodeQLVersion } from './installcodeqlversion';
 import * as toolUtil  from './toolutil';
 import { codeQLVersionToSemantic, isExactVersion } from './versionspec';
+import { Platform } from './taskutil';
 import { TaskParameters } from './interfaces';
 
+
 export async function useCodeQLVersion(parameters: Readonly<TaskParameters>, platform: Platform): Promise<void> {
-    const semanticVersionSpec = codeQLVersionToSemantic(parameters.versionSpec);
+    const semanticVersionSpec = await codeQLVersionToSemantic(parameters);
     task.debug(`Semantic version spec of ${parameters.versionSpec} is ${semanticVersionSpec}`);
 
     if (isExactVersion(semanticVersionSpec)) {

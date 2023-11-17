@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "advancedsecurity-codeql-installer-task",
     "name": "CodeQL Automatic Installer Task",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "publisher": "GHAzDOPreview",
     "targets": [
         {
