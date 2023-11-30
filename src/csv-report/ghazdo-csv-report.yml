@@ -5,5 +5,6 @@
         targetType: filePath
         # use the filePath to point to a local copy of the PowerShell script in your repository
         filePath: ghazdo-csv-report.ps1
+        pwsh: true # Script requires PS7 (otherwise you will see syntax error - Unexpected token '?' )
       env: 
         MAPPED_ADO_PAT: $(reporting-pat)
