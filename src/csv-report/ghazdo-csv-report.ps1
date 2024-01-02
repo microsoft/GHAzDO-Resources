@@ -57,7 +57,7 @@ if ([string]::IsNullOrEmpty($pat)) {
 }
 
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
-$headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(($pat.StartsWith(":") ? $pat : ":$pat"))))" }
+$headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(($pat.Contains(":") ? $pat : ":$pat"))))" }
 $isAzDO = $env:TF_BUILD -eq "True"
 
 # Report Configuration
