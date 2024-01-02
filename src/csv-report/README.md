@@ -41,6 +41,7 @@ Inputs are documented on PowerShell [script](./ghazdo-csv-report.ps1).
 Obtain a [Personal Access Token (PAT)](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) with the following scopes:
 - `Advanced Security - Read`
 - `Code - Read` (needed by default ... for Scope= `organization` or `project` lookup of repository list )
+- `Projects - Read` (for Scope= `organization`)
 
 ### Pipeline Usage
 1. Copy the [script](./ghazdo-csv-report.ps1) contents to your repository.

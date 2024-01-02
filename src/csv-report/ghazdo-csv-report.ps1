@@ -6,7 +6,7 @@
     It filters the alerts based on severity, alert type, and state and then generates a CSV report of the filtered alerts.
     The script contains an SLA based on number of days since the alert was first seen. For critical it is 7 days, high is 30 days, medium is 90 days, and low is 180 days.
 .PARAMETER pat
-    The Azure DevOps Personal Access Token (PAT) with Advanced Security=READ and Code=READ (to look up repositories for scope="organization" or scope="project") permissions.
+    The Azure DevOps Personal Access Token (PAT) with Advanced Security=READ, Code=READ (to look up repositories for scope="organization" or scope="project"), and Project=READ (to look up projects in an organization for scope="organization") permissions.
     If not specified, the script will require the MAPPED_ADO_PAT environment variable.
 .PARAMETER orgUri
     The URL of the Azure DevOps organization.
@@ -37,6 +37,8 @@
     -reportName "ghazdo-report-$(Get-Date -Format "yyyyMMdd").1.csv"
 .NOTES
     This script requires the `pat` parameter to be set or the `MAPPED_ADO_PAT` environment variable to be set.
+    This script requires PS7 or higher.
+    For HTTP payload size verbose debugging output, use $VerbosePreference = "Continue"
 #>
 
 param(
@@ -72,9 +74,13 @@ $severityDays = @{
 $scans = @()
 if ($scope -in @("organization", "project")) {
     $projects = if ($scope -eq "organization") {
-        # get list of projects in the Organization
+        # get list of projects in the Organization - https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/get
         $url = "https://dev.azure.com/{0}/_apis/projects" -f $orgName
-        $projectsResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
+        $projectsResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
+        if ($projectsResponse.StatusCode -ne 200) {
+            Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')❌ - Error $($projectsResponse.StatusCode) $($projectsResponse.StatusDescription) Failed to retrieve projects for org: $orgName with $url"
+            Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Response for projects $url : $($projectsResponse.Content)"
+        }
         ($projectsResponse.Content | ConvertFrom-Json).value
     }
     elseif ($scope -eq "project") {
@@ -82,8 +88,14 @@ if ($scope -in @("organization", "project")) {
     }
 
     foreach ($proj in $projects) {
+        # get list of repos in the project - https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories/get
         $url = "https://dev.azure.com/{0}/{1}/_apis/git/repositories" -f $orgName, $proj.name
-        $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
+        $reposResponse = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
+        if ($reposResponse.StatusCode -ne 200) {
+            Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')❌ - Error $($reposResponse.StatusCode) $($reposResponse.StatusDescription) Failed to retrieve repositories for org: $orgName and project: $($proj.name) with $url"
+            Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Response for repositories $url : $($reposResponse.Content)"
+            continue;
+        }
         $repos = ($reposResponse.Content | ConvertFrom-Json).value
         # Add the org name, project name, and repo name to the hashtable for each repository
         foreach ($repo in $repos) {
@@ -140,7 +152,7 @@ foreach ($scan in $scans) {
         Write-Host "$($isAzdo ? '##[debug]' : '')✅ - Alerts(Count: $($parsedAlerts.Count)) loaded for $alertUri"
     }
     catch {
-        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
+        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:",$_.Exception.Message, $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
         continue;
     }
 
