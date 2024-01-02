@@ -36,6 +36,7 @@
     -repository "myrepository" `
     -reportName "ghazdo-report-$(Get-Date -Format "yyyyMMdd").1.csv"
 .NOTES
+    The maxium number of alerts returned by the Advanced Security API is set to 10000 per repo - API client rate limiting may need to be considered in extreme cases.
     This script requires the `pat` parameter to be set or the `MAPPED_ADO_PAT` environment variable to be set.
     This script requires PS7 or higher.
     For HTTP payload size verbose debugging output, use $VerbosePreference = "Continue"
@@ -69,6 +70,7 @@ $severityDays = @{
     "medium"   = 90
     "low"      = 180
 }
+$maxAlertsPerRepo = 10000 #default is 100 - rate limiting: https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rate-limits?view=azure-devops#api-client-experience
 
 #build the list of repos to scan
 $scans = @()
@@ -115,7 +117,7 @@ elseif ($scope -eq "repository") {
     }
 }
 
-#loop through repo alert list - https://learn.microsoft.com/en-us/rest/api/azure/devops/alert/alerts/list
+#loop through repo alert list - https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list
 [System.Collections.ArrayList]$alertList = @()
 foreach ($scan in $scans) {
     $project = $scan.ProjectName
@@ -123,7 +125,7 @@ foreach ($scan in $scans) {
     $alertUri = $orgUri + ('/' * ($orgUri[-1] -ne '/')) + [uri]::EscapeUriString($project + '/_git/' + $repository + '/alerts')
     $alerts = $null
     $parsedAlerts = $null
-    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts" -f $orgName, $project, $repository
+    $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts?top={3}" -f $orgName, $project, $repository, $maxAlertsPerRepo
     # Send out warnings for any org/project/repo that we cannot access alerts for!
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
@@ -148,11 +150,14 @@ foreach ($scan in $scans) {
                 continue;
             }
         }
-        $parsedAlerts = $alerts.content | ConvertFrom-Json
-        Write-Host "$($isAzdo ? '##[debug]' : '')✅ - Alerts(Count: $($parsedAlerts.Count)) loaded for $alertUri"
+        $parsedAlerts = $alerts.content | ConvertFrom-Json        
+        if ($parsedAlerts.Count -eq $maxAlertsPerRepo) { 
+            Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')ℹ️ - Rate Limiter Prevention - Maximum amount of $maxAlertsPerRepo alerts has been reached for $alertUri. Consider raising the `maxAlertsPerRepo` variable in the script." 
+        }
+        Write-Host "$($isAzdo ? '##[debug]' : '')✅ - $($parsedAlerts.Count) Alerts (Dependency: $($parsedAlerts.value.Where({$_.alertType -eq "dependency"}).Count) / Code: $($parsedAlerts.value.Where({$_.alertType -eq "code"}).Count) / Secrets: $($parsedAlerts.value.Where({$_.alertType -eq "secret"}).Count) ) loaded for $alertUri"          
     }
     catch {
-        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:",$_.Exception.Message, $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
+        Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Message, $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
         continue;
     }
 
