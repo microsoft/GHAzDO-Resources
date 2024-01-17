@@ -150,11 +150,11 @@ foreach ($scan in $scans) {
                 continue;
             }
         }
-        $parsedAlerts = $alerts.content | ConvertFrom-Json        
-        if ($parsedAlerts.Count -eq $maxAlertsPerRepo) { 
-            Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')ℹ️ - Rate Limiter Prevention - Maximum amount of $maxAlertsPerRepo alerts has been reached for $alertUri. Consider raising the `maxAlertsPerRepo` variable in the script." 
+        $parsedAlerts = $alerts.content | ConvertFrom-Json
+        if ($parsedAlerts.Count -eq $maxAlertsPerRepo) {
+            Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')ℹ️ - Rate Limiter Prevention - Maximum amount of $maxAlertsPerRepo alerts has been reached for $alertUri. Consider raising the `maxAlertsPerRepo` variable in the script."
         }
-        Write-Host "$($isAzdo ? '##[debug]' : '')✅ - $($parsedAlerts.Count) Alerts (Dependency: $($parsedAlerts.value.Where({$_.alertType -eq "dependency"}).Count) / Code: $($parsedAlerts.value.Where({$_.alertType -eq "code"}).Count) / Secrets: $($parsedAlerts.value.Where({$_.alertType -eq "secret"}).Count) ) loaded for $alertUri"          
+        Write-Host "$($isAzdo ? '##[debug]' : '')✅ - $($parsedAlerts.Count) Alerts (Dependency: $($parsedAlerts.value.Where({$_.alertType -eq "dependency"}).Count) / Code: $($parsedAlerts.value.Where({$_.alertType -eq "code"}).Count) / Secrets: $($parsedAlerts.value.Where({$_.alertType -eq "secret"}).Count) ) loaded for $alertUri"
     }
     catch {
         Write-Host "$($isAzdo ? '##vso[task.logissue type=warning]' : '')⛔ - Unhandled Exception getting alerts from Azure DevOps Advanced Security:", $_.Exception.Message, $_.Exception.Response.StatusCode, $_.Exception.Response.RequestMessage.RequestUri
