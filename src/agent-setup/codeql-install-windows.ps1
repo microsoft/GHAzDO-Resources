@@ -2,7 +2,6 @@
 ##  File:  CodeQL-Install-Windows.ps1
 ##  Desc:  Install the CodeQL CLI Bundles.
 ##         Borrowed from: https://github.com/actions/runner-images
-##         Requires 7Zip to extract tar/gzip archives
 ################################################################################
 
 function Get-DownloadWithRetry {
@@ -56,24 +55,6 @@ function Get-DownloadWithRetry {
     return $filePath
 }
 
-function Expand-7Zip {
-    Param
-    (
-        [Parameter(Mandatory=$true)]
-        [string]$Path,
-        [Parameter(Mandatory=$true)]
-        [string]$DestinationPath
-    )
-
-    Write-Host "Expand archive '$PATH' to '$DestinationPath' directory"
-    7z.exe x "$Path" -o"$DestinationPath" -y | Out-Null
-
-    if ($LASTEXITCODE -ne 0)
-    {
-        Write-Host "There is an error during expanding '$Path' to '$DestinationPath' directory"
-        exit 1
-    }
-}
 
 # Retrieve the name of the CodeQL bundle preferred by the Action (in the format codeql-bundle-YYYYMMDD).
 $Defaults = (Invoke-RestMethod "https://raw.githubusercontent.com/github/codeql-action/v2/src/defaults.json")
@@ -106,9 +87,7 @@ foreach ($Bundle in $Bundles) {
     New-Item -Path $CodeQLToolcachePath -ItemType Directory -Force | Out-Null
 
     Write-Host "Unpacking the downloaded CodeQL bundle archive..."
-    Expand-7Zip -Path $CodeQLBundlePath -DestinationPath $DownloadDirectoryPath
-    $UnGzipedCodeQLBundlePath = Join-Path $DownloadDirectoryPath "codeql-bundle.tar"
-    Expand-7Zip -Path $UnGzipedCodeQLBundlePath -DestinationPath $CodeQLToolcachePath
+    tar -xzf $CodeQLBundlePath -C $CodeQLToolcachePath
 
     # We only pin the latest version in the toolcache, to support overriding the CodeQL version specified in defaults.json on GitHub Enterprise.
     if ($Bundle.BundleVersion -eq $CodeQLBundleVersion) {
