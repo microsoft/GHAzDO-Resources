@@ -1,0 +1,1128 @@
+{
+  "files": [
+    {
+      "fileName": "./DotNetCoreWebApp2.deps.json",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.deps.json-BF854BD2649DBDAB141F0D7D730C037882346363",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e16ecaac9eb16bafb5d23b4979ed826a138a1a348deafffb749a43d2b3683992"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "bf854bd2649dbdab141f0d7d730c037882346363"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp-7BBC5EEF27DA865235F80A8D8B0AB86F2D556DCE",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4aed58b0c0acd7da2be1ee2cc26c7038429626a395d052b4994099c450b37b71"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "7bbc5eef27da865235f80a8d8b0ab86f2d556dce"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.runtimeconfig.dev.json",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.runtimeconfig.dev.json-A7EBCBE15692FFD69B2EA488A2050A2B54EB843E",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e3e81fb1124261c5e0bb67227ad8673c016befcd48d5568a88171d148561174b"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a7ebcbe15692ffd69b2ea488a2050a2b54eb843e"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.runtimeconfig.json",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.runtimeconfig.json-42816692D22583AF62C2C7AB4EC0899894EEE719",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "edacd11fd952fcfa9ed8dcbf4a3f56510c914f93b3a09b290d67cd4a48928894"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "42816692d22583af62c2c7ab4ec0899894eee719"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./nb/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--nb-Hangfire.Core.resources.dll-62349DCAA06B5076B91358B7533DAC1BE2308959",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4b4102017439120d6799e8f0a5dc29d42efc7f2a96e8478dc869a02e86f9624c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "62349dcaa06b5076b91358b7533dac1be2308959"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2.Views.pdb",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.Views.pdb-A706D49547E8A0551C12F7E3277F96B30CAA7FEB",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1bb30884749d8cc719fae18cec369c3fd89c3c6db6502c103c32f5918e2f843c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a706d49547e8a0551c12f7e3277f96b30caa7feb"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./System.Text.Json.dll",
+      "SPDXID": "SPDXRef-File--System.Text.Json.dll-FA2D46F16FE32DAA5AF2253BA668C36ACB763C60",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e7f80f74baa05e17f2c0c79941d2831052d42ef6b6bedbf43dcb71c9e9348030"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "fa2d46f16fe32daa5af2253ba668c36acb763c60"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.Views.dll",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.Views.dll-DE7457D3247464986E7639FEFE525221F590CC74",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3a16066e29c35a2267dafebfd8fda5ccf80a5a033ddc7607c27052de99c9dfb6"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "de7457d3247464986e7639fefe525221f590cc74"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./pt-BR/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--pt-BR-Hangfire.Core.resources.dll-69310BF2455C3C07447C35004B4DF1DEA2558DB2",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "59a13f2cc119b3c90bb893aad0804ddbf7ca1bf816e95bc8fbdd8282fd578d50"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "69310bf2455c3c07447c35004b4df1dea2558db2"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./fr/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--fr-Hangfire.Core.resources.dll-A4606DFC675586AEC3918C757DD630BB05B55210",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8b196e545c707acfe0a1cf2af9dff59e17d3cd2039bc184830a223b382c3b0c8"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a4606dfc675586aec3918c757dd630bb05b55210"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./Azure.Security.KeyVault.Secrets.dll",
+      "SPDXID": "SPDXRef-File--Azure.Security.KeyVault.Secrets.dll-1A9C0857E9552C5386E72F98621FFD3CDC7B24F3",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "24d0ab8aedb5af6989bba8aafd50715ac78c604e9763de543456e0b804b3f038"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "1a9c0857e9552c5386e72f98621ffd3cdc7b24f3"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2.Views.dll",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.Views.dll-C6D97BA92EF97FD01482C79282CA2A0169B4A8E5",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9dd103e896c0d292661271e15e98550e9b710c25a7f0ca1c5cd33915b557453a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "c6d97ba92ef97fd01482c79282ca2a0169b4a8e5"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./appsettings.Development.json",
+      "SPDXID": "SPDXRef-File--appsettings.Development.json-5923073EEFECF2AD7C4F6A0252346854B9DB57A5",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "07549bfcb929c8fcdc743fb47b5a6932f6da93becb0297557aebdec4910fe669"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5923073eefecf2ad7c4f6a0252346854b9db57a5"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./pt/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--pt-Hangfire.Core.resources.dll-71C2878E901E77E9BCDF8D155CA4CCD8A9835295",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f2b9436d0c2251728c981bacac2d06c4462afcb61d651e07cc47ebaf45c247f7"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "71c2878e901e77e9bcdf8d155ca4ccd8a9835295"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./pt-PT/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--pt-PT-Hangfire.Core.resources.dll-22F62A2B6F1F6620C6E5CD5103FC930EC1ADC794",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6d1040e9fef6fcc2ecab4ecbc27ef1b7af4899d0a72cec0147f4aa161b25397a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "22f62a2b6f1f6620c6e5cd5103fc930ec1adc794"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./Microsoft.Bcl.AsyncInterfaces.dll",
+      "SPDXID": "SPDXRef-File--Microsoft.Bcl.AsyncInterfaces.dll-885973B3CEA40A9ACEBD90E8947EBE49EE4B1B54",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "11c0e8fc6419910ace4f55ddd2330f1373704f996c32ae4336c3f11d589d2c34"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "885973b3cea40a9acebd90e8947ebe49ee4b1b54"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2.runtimeconfig.json",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.runtimeconfig.json-42816692D22583AF62C2C7AB4EC0899894EEE719",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "edacd11fd952fcfa9ed8dcbf4a3f56510c914f93b3a09b290d67cd4a48928894"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "42816692d22583af62c2c7ab4ec0899894eee719"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./packages.lock.json",
+      "SPDXID": "SPDXRef-File--packages.lock.json-0F6961D88E45348C8811EE4C9B7B196A47F487CF",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8ae2ad6e430fc0c28b7b42ed0fcbe9f444f29eae3c0222955f3deb2ac4fff0d7"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "0f6961d88e45348c8811ee4c9b7b196a47f487cf"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2-F742D56DCF49310E30B31A03EBABCFB49B879179",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6417965f2b0f3792423cb34b98330ccb1e1ce84a841df5134ef6fc30f4caae54"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "f742d56dcf49310e30b31a03ebabcfb49b879179"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./de/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--de-Hangfire.Core.resources.dll-E209E1ED92A5B43E0019C8AA9B2050D151EE62D8",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ab80048e3568dc2b1c24565726829496d3c11be7c22dcd62b049f41922e1467b"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "e209e1ed92a5b43e0019c8aa9b2050d151ee62d8"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./FluentValidation.dll",
+      "SPDXID": "SPDXRef-File--FluentValidation.dll-438A584F5A77A56F2C6D233386CD4990D91E2234",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "09abfe78cc3bb51171d10a7a0b78b0a872a2779a6ba5697a622a1c6fdc126b7c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "438a584f5a77a56f2c6d233386cd4990d91e2234"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2.pdb",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.pdb-491F5709432219C67E376FC1C84C62A55371F482",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9efe1fa18b51a8b0f1f0a2301a6900c3b94f1412b36716df1eb24f75de42ab7f"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "491f5709432219c67e376fc1c84c62a55371f482"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./Azure.Core.dll",
+      "SPDXID": "SPDXRef-File--Azure.Core.dll-A9D919DC1514D5C2FCE45B0CEE90F64792305785",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fdf4e4ae7c34ab7c6b41531f125c259ccf3224c8e540d415cb40f554f1e4b0d2"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a9d919dc1514d5c2fce45b0cee90f64792305785"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./Hangfire.Core.dll",
+      "SPDXID": "SPDXRef-File--Hangfire.Core.dll-D079B701EF14CB61EE8EBD4B800769FA85C4B1E3",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b92e850faa7a6f75562e70894d62a572e3f1737639ab44b7a210100e11684186"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "d079b701ef14cb61ee8ebd4b800769fa85c4b1e3"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./zh-TW/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--zh-TW-Hangfire.Core.resources.dll-8D77B06A3DE5F0754DFC96B8FDFE3FFB68329614",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a56ca42aed4b23cd6dd88e213874bf995e52f2c180c4858568d64373630aa41c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "8d77b06a3de5f0754dfc96b8fdfe3ffb68329614"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./System.Memory.Data.dll",
+      "SPDXID": "SPDXRef-File--System.Memory.Data.dll-899F9273DA7D9CB76D2F86C1FAB545981EC1C97E",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "293ca5d86358fb2ce00da02c63eefcb344689fc0c636b61c97c3f1b15a80aa51"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "899f9273da7d9cb76d2f86c1fab545981ec1c97e"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.deps.json",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.deps.json-D621C6591CCB4064C14FAE322580EE771C85BAA8",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b277d9325d069bbc383db4e3f9de5ae1c51707efc9c59c1d18d08a2b0f13fcb0"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "d621c6591ccb4064c14fae322580ee771c85baa8"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.pdb",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.pdb-B9043DE94B0BF5832E87A1E4C587DF4D4BB77125",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e62c501c01d889afffbebd8013baf2ce8f550ec34c2be006863e95cc600c03c6"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "b9043de94b0bf5832e87a1e4c587df4d4bb77125"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./ca/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--ca-Hangfire.Core.resources.dll-E027B6127DB248CFAFF266F70E4E556BDD86D848",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a1dbf26e71c377cda36e954bd20296375f29ceced9ffc22ccd91eff64d9dbadc"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "e027b6127db248cfaff266f70e4e556bdd86d848"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./fa/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--fa-Hangfire.Core.resources.dll-BD4527AF66EAB43C813E80AEA295FEA203001675",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6ae7fad0aa3188e4d2c0e877476df85a7b5eba87fe889503104c081bdc5847cd"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "bd4527af66eab43c813e80aea295fea203001675"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2.runtimeconfig.dev.json",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.runtimeconfig.dev.json-A7EBCBE15692FFD69B2EA488A2050A2B54EB843E",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e3e81fb1124261c5e0bb67227ad8673c016befcd48d5568a88171d148561174b"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a7ebcbe15692ffd69b2ea488a2050a2b54eb843e"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./appsettings.json",
+      "SPDXID": "SPDXRef-File--appsettings.json-2290DF9173FF261F44D8199EB94A5093B283284D",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cc571ddc86496f6b13c370d84e7a24debfc0231c6f4400de6aca0e3160241024"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "2290df9173ff261f44d8199eb94a5093b283284d"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./System.Text.Encodings.Web.dll",
+      "SPDXID": "SPDXRef-File--System.Text.Encodings.Web.dll-0295CBCDDE1FFEB8E700F73F1EE1D63224DDCE19",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ef1153543cf059821e8879306b6b0bb3f9e506b4cabdfe219c08a935e0869dc3"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "0295cbcdde1ffeb8e700f73f1ee1d63224ddce19"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./Newtonsoft.Json.dll",
+      "SPDXID": "SPDXRef-File--Newtonsoft.Json.dll-2CF8CBBE2FF3EAD1C9B28451E3AF5A847FACFEBA",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6a8df611f76a00e8d1ab98c1df6b9136ce43c95ac74adbd0fc581eca08560080"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "2cf8cbbe2ff3ead1c9b28451e3af5a847facfeba"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.dll",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.dll-405D8C677BF094D93B92C2B6170E538A19403412",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1dfaf1c0cb15f3c9a2076c2ef04f7b36d422bb1df81f3d583ee357a172a6256d"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "405d8c677bf094d93b92c2b6170e538a19403412"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp2.dll",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp2.dll-7307CE758F8AD25B7FFB9E8CA598C61CFAB2941E",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f76192a37a22bb03e2635f34405ffd20f5083342f18a601f2fd0db0cec1ea964"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "7307ce758f8ad25b7ffb9e8ca598c61cfab2941e"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./DotNetCoreWebApp.Views.pdb",
+      "SPDXID": "SPDXRef-File--DotNetCoreWebApp.Views.pdb-7F127343025E3DE9CB24D0B0B89D99D38E888E82",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b7d9a9289774eccadef714f1eb212af73540a97d1afe438dd75ecd48edfb588e"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "7f127343025e3de9cb24d0b0b89d99d38e888e82"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./zh/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--zh-Hangfire.Core.resources.dll-9139682A80F82B6E433F67ED47CFCBFCA444BA36",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c211ad6003abd3f2eb44ddb472e97480aa74b7f1d2f592e61f88a1128d21de81"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "9139682a80f82b6e433f67ed47cfcbfca444ba36"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./es/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--es-Hangfire.Core.resources.dll-14B078F0D95B524A375FF9CC36B051ABD927C6AD",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "aa2ab48bea4849dd4d782c0a7db4599366761cac7bf9c951a72f0668c7e925fb"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "14b078f0d95b524a375ff9cc36b051abd927c6ad"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./tr-TR/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--tr-TR-Hangfire.Core.resources.dll-ED58C63C52140E5D449E7EA2CBD77EF909580D83",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fbfcb7777be6c56447e3f1585871d3bc74b109f43ebdb12f4c6e5dd01038eca0"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "ed58c63c52140e5d449e7ea2cbd77ef909580d83"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./nl/Hangfire.Core.resources.dll",
+      "SPDXID": "SPDXRef-File--nl-Hangfire.Core.resources.dll-203CF8845658FE6D4CF7BF2C81172499A91BFC3E",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "80e91522ffbdef91087990841ac5ef50ec57ad2df2762347eb1e0aade175fb8c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "203cf8845658fe6d4cf7bf2c81172499a91bfc3e"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": [
+        "NOASSERTION"
+      ],
+      "copyrightText": "NOASSERTION"
+    }
+  ],
+  "packages": [
+    {
+      "name": "SecurityCodeScan.VS2019",
+      "SPDXID": "SPDXRef-Package-449DB66E8B12A03B8BBFFFC1FB784991C998A1A026199F8740E23C57743CF8DF",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "LGPL-3.0-or-later",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "5.6.2",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/SecurityCodeScan.VS2019@5.6.2"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "System.Memory",
+      "SPDXID": "SPDXRef-Package-BA5D8D1B5043A468B09DDBF48DCFC7DDD44949EE05A23A14F02AE8AA5183745C",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "4.5.4",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/System.Memory@4.5.4"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "Newtonsoft.Json",
+      "SPDXID": "SPDXRef-Package-6A473906540908999A8F246968D1703410FDCC2BA678C5B16D63A542169A272D",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "11.0.1",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/Newtonsoft.Json@11.0.1"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "System.Memory.Data",
+      "SPDXID": "SPDXRef-Package-836302A10D83B34AB15735A3BD20F9E5195E5C19F576DD54B2A803F042B4449F",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "1.0.2",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/System.Memory.Data@1.0.2"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "Hangfire.Core",
+      "SPDXID": "SPDXRef-Package-398F7F09CF103BEB28F7A4C5D865D6692D78E26C768A881466785A1006C70DC3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "GPL-3.0-or-later OR OTHER",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "1.7.31",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/Hangfire.Core@1.7.31"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "FluentValidation",
+      "SPDXID": "SPDXRef-Package-1E6FA5E808499455CF26F6A6FECEE68C1E9A9F3A9B6D525B940A180749D20163",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "11.1.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/FluentValidation@11.1.0"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "Azure.Core",
+      "SPDXID": "SPDXRef-Package-C843E2C0CF1341D972E3C6D9EE6AADF91AFADEE861126BA95257B0E05DEDDE70",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "1.23.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/Azure.Core@1.23.0"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "System.Text.Encodings.Web",
+      "SPDXID": "SPDXRef-Package-79635115AF84D923E985A49E76247A70F70FB8798FC292158F9B6D6B4E2A0336",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "4.7.2",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/System.Text.Encodings.Web@4.7.2"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "System.Text.Json",
+      "SPDXID": "SPDXRef-Package-5D96F0103707CBCFF84B28D306BD0C6F4464B149E2C79A6D1218CC1E093FFD25",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "4.7.2",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/System.Text.Json@4.7.2"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "Microsoft.Bcl.AsyncInterfaces",
+      "SPDXID": "SPDXRef-Package-6B6117AB3417AA50C1DF8B47DB834F43608FA2A493BD063B0DCD0310BE1691FC",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "1.1.1",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@1.1.1"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "Azure.Security.KeyVault.Secrets",
+      "SPDXID": "SPDXRef-Package-A1E619F83432CFFC07958C56A154E0945C0F6962FF2721A0834454CA05FDD115",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "4.4.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/Azure.Security.KeyVault.Secrets@4.4.0"
+        }
+      ],
+      "supplier": "NOASSERTION"
+    },
+    {
+      "name": "Test",
+      "SPDXID": "SPDXRef-RootPackage",
+      "downloadLocation": "NOASSERTION",
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "bb20ba1d8b2b0c8c2f7fe2a21811530d83afa51c"
+      },
+      "filesAnalyzed": true,
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoFromFiles": [
+        "NOASSERTION"
+      ],
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "1.0.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:swid/MyCompany/sbom.mycompany.com/Test@1.0.0?tag_id=5ebe6bf8-75e1-43af-a73b-71350ac2dc2d"
+        }
+      ],
+      "supplier": "Organization: MyCompany",
+      "hasFiles": [
+        "SPDXRef-File--es-Hangfire.Core.resources.dll-14B078F0D95B524A375FF9CC36B051ABD927C6AD",
+        "SPDXRef-File--zh-Hangfire.Core.resources.dll-9139682A80F82B6E433F67ED47CFCBFCA444BA36",
+        "SPDXRef-File--DotNetCoreWebApp.Views.pdb-7F127343025E3DE9CB24D0B0B89D99D38E888E82",
+        "SPDXRef-File--DotNetCoreWebApp2.dll-7307CE758F8AD25B7FFB9E8CA598C61CFAB2941E",
+        "SPDXRef-File--DotNetCoreWebApp.dll-405D8C677BF094D93B92C2B6170E538A19403412",
+        "SPDXRef-File--Newtonsoft.Json.dll-2CF8CBBE2FF3EAD1C9B28451E3AF5A847FACFEBA",
+        "SPDXRef-File--nl-Hangfire.Core.resources.dll-203CF8845658FE6D4CF7BF2C81172499A91BFC3E",
+        "SPDXRef-File--tr-TR-Hangfire.Core.resources.dll-ED58C63C52140E5D449E7EA2CBD77EF909580D83",
+        "SPDXRef-File--System.Text.Encodings.Web.dll-0295CBCDDE1FFEB8E700F73F1EE1D63224DDCE19",
+        "SPDXRef-File--appsettings.json-2290DF9173FF261F44D8199EB94A5093B283284D",
+        "SPDXRef-File--DotNetCoreWebApp2.runtimeconfig.dev.json-A7EBCBE15692FFD69B2EA488A2050A2B54EB843E",
+        "SPDXRef-File--DotNetCoreWebApp2.deps.json-BF854BD2649DBDAB141F0D7D730C037882346363",
+        "SPDXRef-File--fa-Hangfire.Core.resources.dll-BD4527AF66EAB43C813E80AEA295FEA203001675",
+        "SPDXRef-File--ca-Hangfire.Core.resources.dll-E027B6127DB248CFAFF266F70E4E556BDD86D848",
+        "SPDXRef-File--DotNetCoreWebApp.pdb-B9043DE94B0BF5832E87A1E4C587DF4D4BB77125",
+        "SPDXRef-File--DotNetCoreWebApp.deps.json-D621C6591CCB4064C14FAE322580EE771C85BAA8",
+        "SPDXRef-File--System.Memory.Data.dll-899F9273DA7D9CB76D2F86C1FAB545981EC1C97E",
+        "SPDXRef-File--zh-TW-Hangfire.Core.resources.dll-8D77B06A3DE5F0754DFC96B8FDFE3FFB68329614",
+        "SPDXRef-File--Hangfire.Core.dll-D079B701EF14CB61EE8EBD4B800769FA85C4B1E3",
+        "SPDXRef-File--Azure.Core.dll-A9D919DC1514D5C2FCE45B0CEE90F64792305785",
+        "SPDXRef-File--DotNetCoreWebApp2.pdb-491F5709432219C67E376FC1C84C62A55371F482",
+        "SPDXRef-File--FluentValidation.dll-438A584F5A77A56F2C6D233386CD4990D91E2234",
+        "SPDXRef-File--de-Hangfire.Core.resources.dll-E209E1ED92A5B43E0019C8AA9B2050D151EE62D8",
+        "SPDXRef-File--DotNetCoreWebApp2-F742D56DCF49310E30B31A03EBABCFB49B879179",
+        "SPDXRef-File--packages.lock.json-0F6961D88E45348C8811EE4C9B7B196A47F487CF",
+        "SPDXRef-File--DotNetCoreWebApp2.runtimeconfig.json-42816692D22583AF62C2C7AB4EC0899894EEE719",
+        "SPDXRef-File--Microsoft.Bcl.AsyncInterfaces.dll-885973B3CEA40A9ACEBD90E8947EBE49EE4B1B54",
+        "SPDXRef-File--pt-PT-Hangfire.Core.resources.dll-22F62A2B6F1F6620C6E5CD5103FC930EC1ADC794",
+        "SPDXRef-File--pt-Hangfire.Core.resources.dll-71C2878E901E77E9BCDF8D155CA4CCD8A9835295",
+        "SPDXRef-File--appsettings.Development.json-5923073EEFECF2AD7C4F6A0252346854B9DB57A5",
+        "SPDXRef-File--DotNetCoreWebApp2.Views.dll-C6D97BA92EF97FD01482C79282CA2A0169B4A8E5",
+        "SPDXRef-File--Azure.Security.KeyVault.Secrets.dll-1A9C0857E9552C5386E72F98621FFD3CDC7B24F3",
+        "SPDXRef-File--fr-Hangfire.Core.resources.dll-A4606DFC675586AEC3918C757DD630BB05B55210",
+        "SPDXRef-File--pt-BR-Hangfire.Core.resources.dll-69310BF2455C3C07447C35004B4DF1DEA2558DB2",
+        "SPDXRef-File--DotNetCoreWebApp.Views.dll-DE7457D3247464986E7639FEFE525221F590CC74",
+        "SPDXRef-File--System.Text.Json.dll-FA2D46F16FE32DAA5AF2253BA668C36ACB763C60",
+        "SPDXRef-File--DotNetCoreWebApp2.Views.pdb-A706D49547E8A0551C12F7E3277F96B30CAA7FEB",
+        "SPDXRef-File--nb-Hangfire.Core.resources.dll-62349DCAA06B5076B91358B7533DAC1BE2308959",
+        "SPDXRef-File--DotNetCoreWebApp.runtimeconfig.json-42816692D22583AF62C2C7AB4EC0899894EEE719",
+        "SPDXRef-File--DotNetCoreWebApp.runtimeconfig.dev.json-A7EBCBE15692FFD69B2EA488A2050A2B54EB843E",
+        "SPDXRef-File--DotNetCoreWebApp-7BBC5EEF27DA865235F80A8D8B0AB86F2D556DCE"
+      ]
+    }
+  ],
+  "externalDocumentRefs": [],
+  "relationships": [
+    {
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-RootPackage",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-A1E619F83432CFFC07958C56A154E0945C0F6962FF2721A0834454CA05FDD115",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-6B6117AB3417AA50C1DF8B47DB834F43608FA2A493BD063B0DCD0310BE1691FC",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-5D96F0103707CBCFF84B28D306BD0C6F4464B149E2C79A6D1218CC1E093FFD25",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-79635115AF84D923E985A49E76247A70F70FB8798FC292158F9B6D6B4E2A0336",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-1E6FA5E808499455CF26F6A6FECEE68C1E9A9F3A9B6D525B940A180749D20163",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-BA5D8D1B5043A468B09DDBF48DCFC7DDD44949EE05A23A14F02AE8AA5183745C",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-449DB66E8B12A03B8BBFFFC1FB784991C998A1A026199F8740E23C57743CF8DF",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-C843E2C0CF1341D972E3C6D9EE6AADF91AFADEE861126BA95257B0E05DEDDE70",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-398F7F09CF103BEB28F7A4C5D865D6692D78E26C768A881466785A1006C70DC3",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-836302A10D83B34AB15735A3BD20F9E5195E5C19F576DD54B2A803F042B4449F",
+      "spdxElementId": "SPDXRef-RootPackage"
+    },
+    {
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-6A473906540908999A8F246968D1703410FDCC2BA678C5B16D63A542169A272D",
+      "spdxElementId": "SPDXRef-RootPackage"
+    }
+  ],
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "Test 1.0.0",
+  "documentNamespace": "https://sbom.mycompany.com/Test/1.0.0/1qGihcDkOEiUFvFWlMJHcQ",
+  "creationInfo": {
+    "created": "2023-09-25T19:45:09Z",
+    "creators": [
+      "Organization: MyCompany",
+      "Tool: Microsoft.SBOMTool-1.6.2"
+    ]
+  },
+  "documentDescribes": [
+    "SPDXRef-RootPackage"
+  ]
+}

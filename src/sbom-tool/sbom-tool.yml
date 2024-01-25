@@ -1,0 +1,39 @@
+# Sample build that generates a SBOM using the sbom-tool
+
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '6.x'
+
+- script: |
+    dotnet restore DotNetCoreWebApp.sln
+    dotnet build $(Build.SourcesDirectory)/DotNetCoreWebApp.sln --output $(Build.ArtifactStagingDirectory)
+  displayName: 'Build the project'
+
+
+# Generate SBOM - https://github.com/microsoft/sbom-tool/blob/main/docs/setting-up-ado-pipelines.md
+- script: |
+    curl -Lo $(Agent.TempDirectory)/sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-linux-x64
+    chmod +x $(Agent.TempDirectory)/sbom-tool
+    $(Agent.TempDirectory)/sbom-tool generate -b $(Build.ArtifactStagingDirectory) -bc $(Build.SourcesDirectory) -pn Test -pv 1.0.0 -ps MyCompany -nsb https://sbom.mycompany.com -V Verbose -li true
+  displayName: Generate SBOM
+
+#Upload SBOM to Build Artifacts
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
