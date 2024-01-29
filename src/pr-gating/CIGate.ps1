@@ -37,6 +37,13 @@ function AddPRComment($prAlert, $urlAlert) {
         return
     }
 
+    $lineEnd = $($prAlert.physicalLocations[-1].region.lineEnd)
+    $lineStart = $($prAlert.physicalLocations[-1].region.lineStart)
+
+    if ($lineEnd -eq 0) {
+        $lineEnd = $lineStart
+    }
+
     # Define the Body hashtable
     $body = @{
         "comments" = @(
@@ -51,11 +58,11 @@ function AddPRComment($prAlert, $urlAlert) {
         "threadContext" = @{
             "filePath" = "./$($prAlert.physicalLocations[-1].filePath)"
             "rightFileStart" = @{
-                "line" = $($prAlert.physicalLocations[-1].region.lineStart)
+                "line" = $lineStart
                 "offset" = $($prAlert.physicalLocations[-1].region.columnStart)
             }
             "rightFileEnd" = @{
-                "line" = $($prAlert.physicalLocations[-1].region.lineEnd)
+                "line" =  $lineEnd
                 "offset" = $($prAlert.physicalLocations[-1].region.columnEnd)
             }
         }
