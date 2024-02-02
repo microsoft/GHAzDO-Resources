@@ -97,8 +97,38 @@ if (${env:BUILD_REASON} -ne 'PullRequest'){
 }
 
 # Get the alerts on the pr target branch (all without filter) and the PR source branch (only currently open)
-$alertsPRTarget = Invoke-WebRequest -Uri $urlTargetAlerts -Headers $headers -Method Get
 $alertsPRSource = Invoke-WebRequest -Uri $urlSourceAlerts -Headers $headers -Method Get
+
+# The CodeQL scanning of the target branch runs in a separate pipeline. This scan might not have been completed. 
+# Try to get the results 10 times with a 1 min wait between each try.
+$retries = 10
+while ($retries -gt 0) {
+    try {
+        $alertsPRTarget = Invoke-WebRequest -Uri $urlTargetAlerts -Headers $headers -Method Get -ErrorAction Stop
+        # Success
+        break
+    }
+    catch  {
+        # No GHAzDO results on the target branch, wait and retry?
+        if($_.ErrorDetails.Message.Split("`"") -contains "BranchNotFoundException"){
+            $retries--
+            if($retries -eq 0){
+                # We have retried the maximum number of times, give up
+                Write-Host "##vso[task.logissue type=error] We have retried the maximum number of times, give up."          
+                throw $_
+            }
+
+            # Wait and then try again 
+            Write-Host "There are no GHAzDO results on the target branch, wait and try again."          
+            Start-Sleep -Seconds 60
+        }
+        else {
+            # Something else is wrong, give up
+            Write-Host "##vso[task.logissue type=error] There was an unexpected error."          
+            throw $_
+        }
+    }
+}
 
 if ($alertsPRTarget.StatusCode -ne 200){
    Write-Host "##vso[task.logissue type=error] Error getting alerts from Azure DevOps Advanced Security PR target branch:", $alertsPRTarget.StatusCode, $alertsPRTarget.StatusDescription
