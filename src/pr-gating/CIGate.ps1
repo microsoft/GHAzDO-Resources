@@ -1,7 +1,7 @@
 # This script is used as part of our PR gating strategy. It takes advantage of the GHAzDO REST API to check for CodeQL issues a PR source and target branch.
 # If there are 'new' issues in the source branch, the script will fail with error code 1.
 # The script will also log errors, 1 per new CodeQL alert, it will also add PR annotations for the alert
-$pass = ${env:MAPPED_ADO_PAT}
+$pat = ${env:MAPPED_ADO_PAT}
 $orgUri = ${env:SYSTEM_COLLECTIONURI}
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
 $project = ${env:SYSTEM_TEAMPROJECT}
@@ -10,11 +10,7 @@ $prTargetBranch = ${env:SYSTEM_PULLREQUEST_TARGETBRANCH}
 $prSourceBranch = ${env:BUILD_SOURCEBRANCH}
 $prId = ${env:SYSTEM_PULLREQUEST_PULLREQUESTID}
 $prInteration = ${env:SYSTEM_PULLREQUEST_PULLREQUESTITERATION}
-$pair = ":${pass}"
-$bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
-$base64 = [System.Convert]::ToBase64String($bytes)
-$basicAuthValue = "Basic $base64"
-$headers = @{ Authorization = $basicAuthValue }
+$headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(($pat.Contains(":") ? $pat : ":$pat"))))" }
 
 $urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prTargetBranch
 $urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.alertType=3&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
