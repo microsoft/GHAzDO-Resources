@@ -16,11 +16,11 @@ $headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.
 
 #Get-ChildItem Env: | Format-Table -AutoSize
 
-$alertTypes = @("dependency","code")
+$alertTypes = @("dependency", "code")
 #Severities: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list#severity
 $severityPolicy = @{
     "dependency" = @("critical", "high", "medium", "low")
-    "code"     = @("critical", "high", "medium", "low", "error", "warning", "note" ) #Security and Quality Severities
+    "code"       = @("critical", "high", "medium", "low", "error", "warning", "note" ) #Security and Quality Severities
 }
 
 # Alerts - List api: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list
@@ -39,7 +39,7 @@ function AddPRComment($prAlert, $urlAlert) {
     $pathToCheck = $prAlert.physicalLocations[-1].filePath
 
     ## Todo - potentially improve this for transitive dependencies by walking the path to parent(will need to dedup as Dependency scanning will report findings on transitive manifests such as /node_modules/x/package.json )
-    if($prAlert.alertType -eq "dependency") {
+    if ($prAlert.alertType -eq "dependency") {
         #dependency alerts physicalLocations always begin with the last directory in sourceDir (ex: 's/package.json'), so parse it out
         #$sourceDirSegment = Split-Path $sourceDir -Leaf ###also works but harder to test locally as it needs a real Path :)
         $sourceDirSegment = $sourceDir.Split([System.IO.Path]::DirectorySeparatorChar)[-1]
@@ -188,11 +188,11 @@ if ($newAlertIds.length -gt 0) {
 
             # New Alert for this PR. Log and report it.
             Write-Host  ""
-            if($prAlert.alertType -eq "dependency"){
+            if ($prAlert.alertType -eq "dependency") {
                 Write-Host  "##vso[task.logissue type=error] New $($prAlert.severity) severity $($prAlert.alertType) alert detected #$($prAlert.alertId) in library: $($prAlert.logicalLocations[-1].fullyQualifiedName). `"$($prAlert.title)`". Detected in manifest: $($prAlert.physicalLocations[-1].filePath)."
                 $dependencyAlerts++
             }
-            elseif($prAlert.alertType -eq "code"){
+            elseif ($prAlert.alertType -eq "code") {
                 Write-Host  "##vso[task.logissue type=error;sourcepath=$($prAlert.physicalLocations[-1].filePath);linenumber=$($prAlert.physicalLocations[-1].region.lineStart);columnnumber=$($prAlert.physicalLocations[-1].region.columnStart)] New $($prAlert.severity) severity $($prAlert.alertType) alert detected #$($prAlert.alertId) : $($prAlert.title)."
                 $codeAlerts++
             }
@@ -204,7 +204,7 @@ if ($newAlertIds.length -gt 0) {
         }
     }
 
-    if($dependencyAlerts + $codeAlerts -gt 0) {
+    if ($dependencyAlerts + $codeAlerts -gt 0) {
         Write-Host
         Write-Host "##[error] Dissmiss or fix failing alerts listed (dependency #: $dependencyAlerts / code #: $codeAlerts ) and try re-queue the CIVerify task."
         exit 1
