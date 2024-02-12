@@ -45,6 +45,9 @@ function AddPRComment($prAlert, $urlAlert) {
         $sourceDirSegment = $sourceDir.Split([System.IO.Path]::DirectorySeparatorChar)[-1]
         $pathToCheck = $pathToCheck.TrimStart($sourceDirSegment)
     }
+    elseif($prAlert.alertType -eq "code") {
+        $pathToCheck = "/" + $pathToCheck
+    }
 
     # Get Pull Request iterations, we need this to map the file to a changeTrackingId
     $prIterations = Invoke-RestMethod -Uri $urlIteration -Method Get -Headers $headers
@@ -54,7 +57,7 @@ function AddPRComment($prAlert, $urlAlert) {
 
     # Any change to the file with the CodeQL alert in this PR iteration?
     if ($null -eq $iterationItem) {
-        Write-Host "##[debug] In this iteration of the PR:Iteration $prIteration, there is no change to the file where the alert was detected: $pathToCheck."
+        Write-Host "##[debug] In this iteration of the PR:Iteration $prCurrentIteration, there is no change to the file where the alert was detected: $pathToCheck."
         return
     }
 
@@ -106,6 +109,8 @@ function AddPRComment($prAlert, $urlAlert) {
     $response = Invoke-RestMethod -Uri $urlComment -Method Post -Headers $headers -Body $bodyJson -ContentType "application/json"
 
     #Write-Output $response
+    Write-Host "##[debug] New thread created in PR:Iteration $prCurrentIteration : $($response._links.self.href)"
+
 }
 
 Write-Host "Will check to see if there are any new Dependency or Code scanning alerts in this PR branch"
