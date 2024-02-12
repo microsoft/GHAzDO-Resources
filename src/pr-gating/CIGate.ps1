@@ -1,6 +1,6 @@
-# This script is used as part of our PR gating strategy. It takes advantage of the GHAzDO REST API to check for CodeQL issues a PR source and target branch.
+# This script is used as part of our PR gating strategy. It takes advantage of the GHAzDO REST API to check for Code Scanning and Dependency Scanning issues a PR source and target branch.
 # If there are 'new' issues in the source branch, the script will fail with error code 1.
-# The script will also log errors, 1 per new CodeQL alert, it will also add PR annotations for the alert
+# The script will also log errors, 1 per new Code Scanning/Dependency alert, it will also add PR annotations for the alert
 $pat = ${env:MAPPED_ADO_PAT}
 $orgUri = ${env:SYSTEM_COLLECTIONURI}
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
@@ -13,19 +13,16 @@ $prCurrentIteration = ${env:SYSTEM_PULLREQUEST_PULLREQUESTITERATION}
 $buildReason = ${env:BUILD_REASON}
 $sourceDir = ${env:BUILD_SOURCESDIRECTORY}
 $headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(($pat.Contains(":") ? $pat : ":$pat"))))" }
-
 #Get-ChildItem Env: | Format-Table -AutoSize
 
+#GATING POLICY - Which alerts to check for and which severities to include
 $alertTypes = @("dependency", "code")
-#Severities: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list#severity
 $severityPolicy = @{
     "dependency" = @("critical", "high", "medium", "low")
     "code"       = @("critical", "high", "medium", "low", "error", "warning", "note" ) #Security and Quality Severities
 }
 
-# Alerts - List api: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list
-# criteria.states = 1 means open alerts
-# criteria.alertType does not support multiple values, so we need to allow default and filter out later
+# Alerts - List api: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list (criteria.states = 1 means open alerts, criteria.alertType does not support multiple values, so we need to allow default and filter out later)
 $urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prTargetBranch
 $urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
 
@@ -52,10 +49,10 @@ function AddPRComment($prAlert, $urlAlert) {
     # Get Pull Request iterations, we need this to map the file to a changeTrackingId
     $prIterations = Invoke-RestMethod -Uri $urlIteration -Method Get -Headers $headers
 
-    # Find the changeTrackingId mapping to the file with the CodeQL alert
+    # Find the changeTrackingId mapping to the file with the Code Scanning alert
     $iterationItem = $prIterations.changeEntries | Where-Object { $_.item.path -like $pathToCheck } | Select-Object -First 1
 
-    # Any change to the file with the CodeQL alert in this PR iteration?
+    # Any change to the file with the alert in this PR iteration?
     if ($null -eq $iterationItem) {
         Write-Host "##[debug] In this iteration of the PR:Iteration $prCurrentIteration, there is no change to the file where the alert was detected: $pathToCheck."
         return
@@ -101,8 +98,6 @@ function AddPRComment($prAlert, $urlAlert) {
 
     # Convert the hashtable to a JSON string
     $bodyJson = $body | ConvertTo-Json -Depth 10
-
-    # Print the JSON string
     #Write-Output $bodyJson
 
     # Send the PR Threads Create POST request
@@ -111,6 +106,7 @@ function AddPRComment($prAlert, $urlAlert) {
     #Write-Output $response
     Write-Host "##[debug] New thread created in PR:Iteration $prCurrentIteration : $($response._links.self.href)"
 
+    return
 }
 
 Write-Host "Will check to see if there are any new Dependency or Code scanning alerts in this PR branch"
@@ -124,7 +120,7 @@ if ($buildReason -ne 'PullRequest') {
 # Get the alerts on the pr target branch (all without filter) and the PR source branch (only currently open)
 $alertsPRSource = Invoke-WebRequest -Uri $urlSourceAlerts -Headers $headers -Method Get
 
-# The CodeQL scanning of the target branch runs in a separate pipeline. This scan might not have been completed.
+# The Advanced Security scanning of the target branch runs in a separate pipeline. This scan might not have been completed.
 # Try to get the results 10 times with a 1 min wait between each try.
 $retries = 10
 while ($retries -gt 0) {
@@ -185,7 +181,7 @@ if ($newAlertIds.length -gt 0) {
     foreach ($prAlert in $jsonPRSource) {
         if ($newAlertIds -contains $prAlert.alertId) {
 
-            #check to see $alert.severity in $severityPolicy for given alertType
+            #check to see $alert.severity in $severityPolicy for given alertType - valid severities: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list#severity
             if ($severityPolicy[$prAlert.alertType] -notcontains $prAlert.severity) {
                 Write-Host "##[warning] Ignored by policy - $($prAlert.severity) severity $($prAlert.alertType) alert detected #$($prAlert.alertId) : $($prAlert.title) in pr branch $($prSourceBranch)."
                 continue
@@ -212,7 +208,7 @@ if ($newAlertIds.length -gt 0) {
     if ($dependencyAlerts + $codeAlerts -gt 0) {
         Write-Host
         Write-Host "##[error] Dissmiss or fix failing alerts listed (dependency #: $dependencyAlerts / code #: $codeAlerts ) and try re-queue the CIVerify task."
-        exit 1
+        exit 1 #TODO - dynamically pass/fail the build only if a PR comment was added, indicating that there are new alerts that were directly created by this PR.  Since we do incremental PR iteration based comments this is not currently viable.
     }
     else {
         Write-Host "##[warning] New alerts detected but none that violate policy - all is fine though these will appear in the Advanced Security UI."
