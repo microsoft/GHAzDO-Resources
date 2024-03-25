@@ -61,7 +61,7 @@ $headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.
 $isAzDO = $env:TF_BUILD -eq "True"
 
 # Report Configuration
-$severities = @("critical", "high", "medium", "low")
+$severities = @("critical", "high", "medium", "low", "error", "warning", "note")
 $states = @("active", "fixed", "dismissed")
 $alertTypes = @("code", "secret", "dependency")
 $severityDays = @{
@@ -69,6 +69,10 @@ $severityDays = @{
     "high"     = 30
     "medium"   = 90
     "low"      = 180
+    #Quality Severities and SARIF integrations
+    "error"    = 30
+    "warning"  = 90
+    "note"     = 180
 }
 $maxAlertsPerRepo = 10000 #default is 100 - rate limiting: https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rate-limits?view=azure-devops#api-client-experience
 
@@ -172,6 +176,7 @@ foreach ($scan in $scans) {
                 "Alert State"      = $alert.state
                 "Alert Title"      = $alert.title
                 "Alert Type"       = $alert.alertType
+                "Tool"             = ($alert.tools | Select-Object -ExpandProperty name) -join ","
                 "Rule Id"          = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty opaqueId) -join ","
                 "Rule Name"        = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty friendlyName) -join ","
                 "Rule Description" = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty description) -join ","

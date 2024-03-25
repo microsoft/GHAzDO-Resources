@@ -13,6 +13,7 @@ Columns:
 - "Alert State"
 - "Alert Title"
 - "Alert Type"
+- "Tool"
 - "Rule Id"
 - "Rule Name"
 - "Rule Description"
@@ -22,7 +23,7 @@ Columns:
 - "Last Seen"
 - "Fixed On"
 - "Dismissed On"
-- "Dismissal Type"  
+- "Dismissal Type"
 - "SLA Days"
 - "Days overdue"
 - "Alert Link"
@@ -31,12 +32,12 @@ Columns:
 - "Repository"
 - "Ref"
 - "Ecosystem"
-- "Location Paths"  
+- "Location Paths"
 - "Logical Paths"
 
 ## Setup
 
-Inputs are documented on PowerShell [script](./ghazdo-csv-report.ps1).  
+Inputs are documented on PowerShell [script](./ghazdo-csv-report.ps1).
 
 Obtain a [Personal Access Token (PAT)](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) with the following scopes:
 - `Advanced Security - Read`
@@ -45,7 +46,7 @@ Obtain a [Personal Access Token (PAT)](https://learn.microsoft.com/en-us/azure/d
 
 ### Pipeline Usage
 1. Copy the [script](./ghazdo-csv-report.ps1) contents to your repository.
-1. Reference the sample [pipeline](./ghazdo-csv-report.yml) and include the `PowerShell@2` task in a pipeline that references your repository. 
+1. Reference the sample [pipeline](./ghazdo-csv-report.yml) and include the `PowerShell@2` task in a pipeline that references your repository.
    - the `filePath` property is a reference the script as you named the file in your repository (a relative path to the source root is needed if you moved into a different directory)
    - observe it is requiring a PAT to be set in the variable `reporting-pat` that is then passed to an environment variable used by the script.
 1. Obtain the PAT as described above and [set as a secret variable](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/set-secret-variables) named `reporting-pat` from the sample [pipeline](./ghazdo-csv-report.yml)
@@ -65,4 +66,4 @@ Obtain a [Personal Access Token (PAT)](https://learn.microsoft.com/en-us/azure/d
 
 ### Report Output
 
-- See: [Sample Report](./ghazdo-report-20231020.1.csv)
+- See: [Sample Report](./ghazdo-report-20240325.1.csv)
