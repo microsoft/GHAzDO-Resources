@@ -1,3 +1,15 @@
+steps:
+- task: AdvancedSecurity-Codeql-Init@1
+  inputs:
+    languages: 'javascript'
+
+- task: AdvancedSecurity-Codeql-Autobuild@1
+- task: AdvancedSecurity-Dependency-Scanning@1
+# Wait for Advanced Security to process published SARIF file before completing
+- task: AdvancedSecurity-Codeql-Analyze@1
+  inputs:
+    WaitForProcessing: true
+ 
  # add Gating Task
  - task: PowerShell@2
       displayName: 'Gating pipeline based on Advanced Security alerts'
