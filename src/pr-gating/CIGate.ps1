@@ -58,40 +58,67 @@ function AddPRComment($prAlert, $urlAlert) {
         return
     }
 
-    $lineEnd = $($prAlert.physicalLocations[-1].region.lineEnd)
-    $lineStart = $($prAlert.physicalLocations[-1].region.lineStart)
-
-    if ($lineEnd -eq 0) {
-        $lineEnd = $lineStart
-    }
-
-    # Define the Body hashtable
-    $body = @{
-        "comments"                 = @(
-            @{
-                "content"     = "**$($prAlert.title)**
-                $($prAlert.tools.rules.description)
-                See details [here]($($urlAlert))"
-                "commentType" = 1
+    if ($prAlert.alertType -eq "dependency") {
+        # Define the Body hashtable
+        # Dependency alerts do not have line numbers, so we will not add a line number to the comment
+        $body = @{
+            "comments"                 = @(
+                @{
+                    "content"     = "**$($prAlert.title)**
+                    $($prAlert.tools.rules.description)
+                    See details [here]($($urlAlert))"
+                    "commentType" = 1
+                }
+            )
+            "status"                   = 1
+            "threadContext"            = @{
+                "filePath"       = "./$($prAlert.physicalLocations[-1].filePath)"
             }
-        )
-        "status"                   = 1
-        "threadContext"            = @{
-            "filePath"       = "./$($prAlert.physicalLocations[-1].filePath)"
-            "rightFileStart" = @{
-                "line"   = $lineStart
-                "offset" = $($prAlert.physicalLocations[-1].region.columnStart)
-            }
-            "rightFileEnd"   = @{
-                "line"   = $lineEnd
-                "offset" = $($prAlert.physicalLocations[-1].region.columnEnd)
+            "pullRequestThreadContext" = @{
+                "changeTrackingId" = $($iterationItem.changeTrackingId)
+                "iterationContext" = @{
+                    "firstComparingIteration"  = $($prCurrentIteration)
+                    "secondComparingIteration" = $($prCurrentIteration)
+                }
             }
         }
-        "pullRequestThreadContext" = @{
-            "changeTrackingId" = $($iterationItem.changeTrackingId)
-            "iterationContext" = @{
-                "firstComparingIteration"  = $($prCurrentIteration)
-                "secondComparingIteration" = $($prCurrentIteration)
+    }
+    elseif($prAlert.alertType -eq "code") {
+        $lineEnd = $($prAlert.physicalLocations[-1].region.lineEnd)
+        $lineStart = $($prAlert.physicalLocations[-1].region.lineStart)
+
+        if ($lineEnd -eq 0) {
+            $lineEnd = $lineStart
+        }
+
+        # Define the Body hashtable
+        $body = @{
+            "comments"                 = @(
+                @{
+                    "content"     = "**$($prAlert.title)**
+                    $($prAlert.tools.rules.description)
+                    See details [here]($($urlAlert))"
+                    "commentType" = 1
+                }
+            )
+            "status"                   = 1
+            "threadContext"            = @{
+                "filePath"       = "./$($prAlert.physicalLocations[-1].filePath)"
+                "rightFileStart" = @{
+                    "line"   = $lineStart
+                    "offset" = $($prAlert.physicalLocations[-1].region.columnStart)
+                }
+                "rightFileEnd"   = @{
+                    "line"   = $lineEnd
+                    "offset" = $($prAlert.physicalLocations[-1].region.columnEnd)
+                }
+            }
+            "pullRequestThreadContext" = @{
+                "changeTrackingId" = $($iterationItem.changeTrackingId)
+                "iterationContext" = @{
+                    "firstComparingIteration"  = $($prCurrentIteration)
+                    "secondComparingIteration" = $($prCurrentIteration)
+                }
             }
         }
     }
