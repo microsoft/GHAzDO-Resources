@@ -13,3 +13,10 @@ This sample utilizes the [microsoft/sbom-tool](https://github.com/microsoft/sbom
 ## Pipelines
 
 The generated SBOM can be uploaded as an artifact to the pipeline in Azure DevOps. Reference the [sbom-tool.yml](sbom-tool.yml) as a guide for implementation.
+
+Once the pipeline run has completed, the SBOM and hash will be uploaded as an artifact published to the pipeline
+- sample [manifest.spdx.json](manifest.spdx.json)
+  
+![image](https://github.com/microsoft/GHAzDO-Resources/assets/1760475/6c1ab0ff-b663-4303-afd7-2493689133d1)
+
+![image](https://github.com/microsoft/GHAzDO-Resources/assets/1760475/ae42d814-a319-4e09-840a-21fa0ef7309e)
