@@ -192,9 +192,9 @@ if ($alertsPRSource.StatusCode -ne 200) {
 $jsonPRTarget = ($alertsPRTarget.Content | ConvertFrom-Json).value | Where-Object { $alertTypes -contains $_.alertType }
 $jsonPRSource = ($alertsPRSource.Content | ConvertFrom-Json).value | Where-Object { $alertTypes -contains $_.alertType }
 
-# Extract alert ids from the list of alerts on pr target/source branch.
-$prTargetAlertIds = $jsonPRTarget | Select-Object -ExpandProperty alertId
-$prSourceAlertIds = $jsonPRSource | Select-Object -ExpandProperty alertId
+# Extract alert ids from the list of alerts on pr target/source branch and convert to arrays to handle null objects comparison.
+$prTargetAlertIds = @($jsonPRTarget.value | Select-Object -ExpandProperty alertId)
+$prSourceAlertIds = @($jsonPRSource.value | Select-Object -ExpandProperty alertId)
 
 # Check for alert ids that are reported in the PR source branch but not the pr target branch
 $newAlertIds = Compare-Object $prSourceAlertIds $prTargetAlertIds -PassThru | Where-Object { $_.SideIndicator -eq '<=' }
