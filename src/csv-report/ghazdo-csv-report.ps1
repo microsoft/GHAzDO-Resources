@@ -189,7 +189,7 @@ foreach ($scan in $scans) {
                 "Dismissal Type"   = $alert.dismissal.dismissalType
                 "SLA Days"         = $severityDays[$alert.severity]
                 "Days overdue"     = $alert.state -ne "active" ? 0 : [Math]::Max([int]((Get-Date).ToUniversalTime().AddDays(-$severityDays[$alert.severity]) - ($alert.firstSeenDate)).TotalDays, 0)
-                "Alert Link"       = "$($alert.repositoryUrl)/alerts/$($alert.alertId)"
+                "Alert Link"       = $null -eq$alert.gitRef ? "$($alert.repositoryUrl)/alerts/$($alert.alertId)" : "$($alert.repositoryUrl)/alerts/$($alert.alertId)?branch=$($alert.gitRef)"
                 "Organization"     = $orgName
                 "Project"          = $project
                 "Repository"       = $repository
