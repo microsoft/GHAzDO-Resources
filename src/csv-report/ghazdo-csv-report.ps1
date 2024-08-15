@@ -134,7 +134,7 @@ foreach ($scan in $scans) {
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
         if ($alerts.StatusCode -ne 200) {
-            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/management/repo-enablement/get?view=azure-devops-rest-7.2
+            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/repo-enablement/get?view=azure-devops-rest-7.2
             $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repository
             $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
             Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Unable to access $alertUri ($($alerts.StatusCode) $($alerts.StatusDescription)) - Response from enablement endpoint: $enablementurl ($($repoEnablement.StatusCode) $($repoEnablement.StatusDescription))"
