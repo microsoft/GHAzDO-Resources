@@ -30,7 +30,6 @@ $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
 $base64 = [System.Convert]::ToBase64String($bytes)
 $basicAuthValue = "Basic $base64"
 $headers = @{ Authorization = $basicAuthValue }
-
 $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts?api-version=7.2-preview.1" -f $orgName, $project, $repositoryId
 
 $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
