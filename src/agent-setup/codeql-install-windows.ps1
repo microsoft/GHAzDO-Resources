@@ -79,11 +79,21 @@ $Bundles = @(
 )
 
 foreach ($Bundle in $Bundles) {
+    # Determine if the bundle is already installed.
+    $CodeQLToolcachePath = Join-Path $Env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath $Bundle.BundleVersion | Join-Path -ChildPath "x64"
+    
+    $BundleDirExists = Test-Path $CodeQLToolcachePath
+    $CompletionFileExists = Test-Path "$CodeQLToolcachePath.complete" -PathType Leaf
+
+    if ($BundleDirExists -And $CompletionFileExists)
+    {
+        Write-Host "CodeQL bundle $($Bundle.BundleVersion) already exists, skipping installation ..."
+        continue
+    }
+    
     Write-Host "Downloading CodeQL bundle $($Bundle.BundleVersion)..."
     $CodeQLBundlePath = Get-DownloadWithRetry -Url "https://github.com/github/codeql-action/releases/download/$($Bundle.TagName)/codeql-bundle.tar.gz" -Name "codeql-bundle.tar.gz"
-    $DownloadDirectoryPath = (Get-Item $CodeQLBundlePath).Directory.FullName
 
-    $CodeQLToolcachePath = Join-Path $Env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath $Bundle.BundleVersion | Join-Path -ChildPath "x64"
     New-Item -Path $CodeQLToolcachePath -ItemType Directory -Force | Out-Null
 
     Write-Host "Unpacking the downloaded CodeQL bundle archive..."
