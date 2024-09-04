@@ -2,14 +2,6 @@
 
 - Copy the two files CIGate.ps1 and CIVerify.yml into your own GHAzDO enabled ADO project repo.
 
-- Generate a new [PAT for ADO](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate).
-
-  You can call it GHAZDO_PRGATING_PAT, pick an expiry date.
-
-  Give the new PAT ```Advanced Security - Read, Code - Read, Pull Request Threads - Read & write``` access.
-
-  Save the generated PAT key before closing the UI.
-
 - Add CIVerify as a new pipeline.
 
   Pipelines - New Pipeline - Select your code location and configure your pipeline as an existing yaml file.
@@ -18,11 +10,16 @@
 
   Review the .yaml file, open up the UI to add a new Variable.
 
-  Add a variable called GATING_PAT and set it's content to the PAT key you got in the previus step.
-
   Save your pipeline and optionaly run it.
 
   Find your new pipeline in the ADO UI, [rename it](https://learn.microsoft.com/en-us/azure/devops/pipelines/customize-pipeline?view=azure-devops#pipeline-settings) to CIVerify.
+
+- Grant permissions to your pipeline
+
+  The build service for your pipeline needs permissions to be able to contribute to PRs to add comments for each security finding.
+
+  In your Project Settings -> Repositories -> Security, modify your repositories build service to `Allow` for `Contribute to pull requests`
+
 
 - Setup [build verification for your main branch](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#build-validation). Pick the CIVerify pipeline. If your developers does not have access rights to dissmiss alerts it is a good idea to set this check to optional. That way, a PR can be completed even if the alert is a false possitive. The rest of the settings can be keep as their default settings.
 
