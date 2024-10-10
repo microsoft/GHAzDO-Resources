@@ -1,0 +1,21 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-4270c34d1f4b297a581cfd19be6a782bda5a38c9ec399303c44ddceba93b04e6",
+  "author": "Unknown Author",
+  "timestamp": "2024-10-04T15:53:51.523386+02:00",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2024-21907"
+      },
+      "timestamp": "2024-10-04T15:53:51.523387+02:00",
+      "products": [
+        {
+          "@id": "pkg:nuget/Newtonsoft.Json@11.0.1"
+        }
+      ],
+      "status": "under_investigation"
+    }
+  ]
+}
