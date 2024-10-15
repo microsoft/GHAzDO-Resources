@@ -4,10 +4,6 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  # Run unsupported SARIF
-  advancedsecurity.publish.filterunsupportedtools: 'false'
-
 steps:
 
 - script: docker run -e GITHUB_ACTIONS=true -e GITHUB_WORKFLOW=1 -v $(Build.SourcesDirectory):/app ghcr.io/psalm/psalm-security-scan 

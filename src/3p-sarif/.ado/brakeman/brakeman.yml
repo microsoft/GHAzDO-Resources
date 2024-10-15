@@ -4,10 +4,6 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  # Run unsupported SARIF
-  advancedsecurity.publish.filterunsupportedtools: 'false'
-
 steps:
   - task: UseRubyVersion@0
     inputs:

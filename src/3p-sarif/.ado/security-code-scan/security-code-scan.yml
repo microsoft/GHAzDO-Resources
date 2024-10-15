@@ -9,10 +9,6 @@ trigger:
 pool:
   vmImage: windows-latest
 
-variables:
-  # Run unsupported SARIF
-  advancedsecurity.publish.filterunsupportedtools: 'false'
-
 steps:
 # https://github.com/security-code-scan/security-code-scan-add-action/blob/main/action.yml
 - pwsh: |

@@ -2,9 +2,6 @@ trigger:
 - master
 pool:
   vmImage: ubuntu-latest
-variables:
-  # Run unsupported SARIF
-  advancedsecurity.publish.filterunsupportedtools: "false"
 steps:
   - task: UsePythonVersion@0
     inputs:
