@@ -1,0 +1,30 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: UseRubyVersion@0
+    inputs:
+      versionSpec: '>= 2.5'
+      addToPath: true
+
+  - script: |
+      gem install brakeman
+    displayName: 'Install Brakeman'
+
+  - script: |
+      brakeman -f sarif -o output.sarif .
+    displayName: 'Run Brakeman'
+    continueOnError: true
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: 'output.sarif'
+      ArtifactName: 'BrakemanScanResults'
+
+  - task: AdvancedSecurity-Publish@1
+    inputs:
+      SarifsInputDirectory: '$(Build.SourcesDirectory)'
+      Category: 'brakeman'
