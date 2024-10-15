@@ -8,6 +8,3 @@ steps:
   - task: AdvancedSecurity-CodeQL-Analyze@1
     displayName: Perform CodeQL Analysis (Autoinjected)
     condition: eq(variables['AdvancedSecurity.CodeQL.Autoconfig'], 'true')
-  - task: AdvancedSecurity-Publish@1
-    displayName: Publish CodeQL Results (Autoinjected)
-    condition: eq(variables['AdvancedSecurity.CodeQL.Autoconfig'], 'true')
