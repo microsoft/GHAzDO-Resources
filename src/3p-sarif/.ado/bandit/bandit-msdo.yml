@@ -1,0 +1,20 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # Run unsupported SARIF
+  advancedsecurity.publish.filterunsupportedtools: 'false'
+
+
+steps:
+- task: MicrosoftSecurityDevOps@1
+  inputs:
+    tools: 'bandit'
+
+- task: AdvancedSecurity-Publish@1
+  inputs:
+    SarifsInputDirectory: '$(Build.ArtifactStagingDirectory)/.gdn/'
+    Category: 'Bandit'    

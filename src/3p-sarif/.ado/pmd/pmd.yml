@@ -1,0 +1,29 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: |
+    URL=$(curl -s https://api.github.com/repos/pmd/pmd/releases/latest  | jq -r '.assets[] | select(.name | contains("bin")).browser_download_url')
+    curl -L $URL -o pmd.zip
+    unzip pmd.zip -d pmd
+    mv pmd/*/* pmd
+  displayName: 'Download PMD'
+
+- script: |
+    ./pmd/bin/pmd check . -R plsql.xml -r results.sarif -f sarif
+  displayName: 'Run PMD'
+  continueOnError: true 
+
+- script: |
+    BASE_URI="file://$(Build.SourcesDirectory)/"  
+    cat results.sarif | jq --arg base "$BASE_URI" 'walk(if type == "string" and startswith($base) then .[($base | length):] else . end)' > fixed.sarif
+    rm results.sarif
+  displayName: 'Convert SARIF to relative paths'
+
+- task: AdvancedSecurity-Publish@1
+  inputs:
+    SarifsInputDirectory: '.'
+    Category: 'PMD'
