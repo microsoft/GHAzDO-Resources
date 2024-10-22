@@ -25,12 +25,11 @@ $orgUri = ${env:SYSTEM_COLLECTIONURI} #$(System.CollectionUri) #$env:SYSTEM_COLL
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
 $project = ${env:SYSTEM_TEAMPROJECT} #$(System.TeamProject) #$env:SYSTEM_TEAMPROJECT = "TODO-YOUR-PROJECT-NAME-HERE"
 $repositoryId = ${env:BUILD_REPOSITORY_ID} #$(Build.Repository.ID) #env:BUILD_REPOSITORY_ID= "TODO-YOUR-REPO-GUID-HERE"
-$pair = ":${pass}"
-$bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
-$base64 = [System.Convert]::ToBase64String($bytes)
-$basicAuthValue = "Basic $base64"
-$headers = @{ Authorization = $basicAuthValue }
-$url = "https://advsec.dev.azure.com/{0}/{1}/_apis/AdvancedSecurity/Repositories/{2}/alerts?useDatabaseProvider=true" -f $orgName, $project, $repositoryId
+
+$headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(($pass.Contains(":") ? $pass : ":$pass"))))" }
+$maxAlertsPerRepo = 10000 #default is 100 - rate limiting: https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rate-limits?view=azure-devops#api-client-experience
+# Advanced Security - Alerts - List https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list
+$url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts?top={3}" -f $orgName, $project, $repositoryId, $maxAlertsPerRepo
 
 $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
 if ($alerts.StatusCode -ne 200) {
@@ -40,26 +39,36 @@ if ($alerts.StatusCode -ne 200) {
 $parsedAlerts = $alerts.content | ConvertFrom-Json
 
 # Policy Threshold
-$severities = @("critical", "high") #, "medium", "low"
-$states = @("active")
-$slaDays = 10
+$severities = @("critical", "high") #, "medium", "low", "error", "warning", "note"
+$states = @("active") #"fixed", "dismissed")
 $alertTypes = @("code", "secret", "dependency")
+$severityDays = @{
+    # Security Severties (active only)
+    "critical" = 7
+    "high"     = 30
+    "medium"   = 90
+    "low"      = 180
+    #Quality Severities and SARIF integrations (active only)
+    "error"    = 30
+    "warning"  = 90
+    "note"     = 180
+}
 
 [System.Collections.ArrayList]$failingAlerts = @()
 
 $failingAlerts = foreach ($alert in $parsedAlerts.value) {
     if ($alert.severity -in $severities `
             -and $alert.state -in $states `
-            -and $alert.firstSeenDate -lt (Get-Date).ToUniversalTime().AddDays(-$slaDays) `
+            -and ($alert.state -eq "active" -and $alert.firstSeenDate -lt (Get-Date).ToUniversalTime().AddDays(-$severityDays[$alert.severity]) ) `
             -and $alert.alertType -in $alertTypes) {
         @{
             "Alert Title"  = $alert.title
             "Alert Id"     = $alert.alertId
-            "Alert Type"   = $alert.alertType
+            "Alert Type"   = "$($alert.alertType) ($(($alert.tools | Select-Object -ExpandProperty name) -join ","))"
             "Severity"     = $alert.severity
-            "Description"  = $alert.rule.description
+            "Description"  = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty description) -join ","
             "First Seen"   = $alert.firstSeenDate
-            "Days overdue" = [int]((Get-Date).ToUniversalTime().AddDays(-$slaDays) - ($alert.firstSeenDate)).TotalDays
+            "Days overdue" = [int]((Get-Date).ToUniversalTime().AddDays(-$severityDays[$alert.severity]) - ($alert.firstSeenDate)).TotalDays
             "Alert Link"   = "$($alert.repositoryUrl)/alerts/$($alert.alertId)"
         }
     }
