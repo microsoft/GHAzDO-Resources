@@ -31,7 +31,6 @@ $maxAlertsPerRepo = 10000 #default is 100 - rate limiting: https://learn.microso
 # Advanced Security - Alerts - List https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list
 $url = "https://advsec.dev.azure.com/{0}/{1}/_apis/alert/repositories/{2}/alerts?top={3}" -f $orgName, $project, $repositoryId, $maxAlertsPerRepo
 
-
 $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
 if ($alerts.StatusCode -ne 200) {
     Write-Host "##vso[task.logissue type=error] Error getting alerts from Azure DevOps Advanced Security:", $alerts.StatusCode, $alerts.StatusDescription
