@@ -78,7 +78,7 @@ if ($failingAlerts.Count -gt 0) {
     $errorText = "##vso[task.logissue type=error] Found {0} failing alerts out of SLA policy:" -f $failingAlerts.Count
     Write-Host $errorText
     foreach ($alert in $failingAlerts) {
-        $alert | Format-Table -AutoSize -HideTableHeaders | Out-String | Write-Host
+        $alert | Format-Table -AutoSize -HideTableHeaders | Out-String -Width 512 | Write-Host
         Write-Host $([System.Environment]::NewLine)
     }
     exit 1
