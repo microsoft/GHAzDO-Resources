@@ -187,6 +187,7 @@ foreach ($scan in $scans) {
                 "Last Seen"         = $null -eq $alert.lastSeenDate ? "" : ($alert.lastSeenDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
                 "Fixed On"          = $null -eq $alert.fixedDate ? "" : ($alert.fixedDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
                 "Dismissed On"      = $null -eq $alert.dismissal.requestedOn ? "" : ($alert.dismissal.requestedOn).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                "Dismissed By"      = $alert.dismissal.stateChangedByIdentity.uniqueName
                 "Dismissal Type"    = $alert.dismissal.dismissalType
                 "Dismissal Message" = $alert.dismissal.message
                 "SLA Days"          = $severityDays[$alert.severity]
