@@ -134,9 +134,10 @@ foreach ($scan in $scans) {
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
         if ($alerts.StatusCode -ne 200) {
-            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/management/repo-enablement/get?view=azure-devops-rest-7.2
+            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/repo-enablement/get?view=azure-devops-rest-7.2
             $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repository
             $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
+            Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Unable to access $alertUri ($($alerts.StatusCode) $($alerts.StatusDescription)) - Response from enablement endpoint: $enablementurl ($($repoEnablement.StatusCode) $($repoEnablement.StatusDescription))"
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
@@ -189,7 +190,7 @@ foreach ($scan in $scans) {
                 "Dismissal Type"   = $alert.dismissal.dismissalType
                 "SLA Days"         = $severityDays[$alert.severity]
                 "Days overdue"     = $alert.state -ne "active" ? 0 : [Math]::Max([int]((Get-Date).ToUniversalTime().AddDays(-$severityDays[$alert.severity]) - ($alert.firstSeenDate)).TotalDays, 0)
-                "Alert Link"       = "$($alert.repositoryUrl)/alerts/$($alert.alertId)"
+                "Alert Link"       = $null -eq$alert.gitRef ? "$($alert.repositoryUrl)/alerts/$($alert.alertId)" : "$($alert.repositoryUrl)/alerts/$($alert.alertId)?branch=$($alert.gitRef)"
                 "Organization"     = $orgName
                 "Project"          = $project
                 "Repository"       = $repository
