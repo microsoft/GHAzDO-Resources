@@ -47,4 +47,4 @@ steps:
     filePath: CIGate.ps1
     pwsh: true # Script requires PS7 (otherwise you will see syntax error - Unexpected token '?' )
   env:
-    MAPPED_ADO_PAT: $(GATING_PAT)
+    MAPPED_ADO_PAT: $(System.AccessToken)
