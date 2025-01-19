@@ -12,10 +12,10 @@
     "version": {
         "Major": 0,
         "Minor": 2,
-        "Patch": 0
+        "Patch": 1
     },
     "execution": {
-        "Node": {
+        "Node20_1": {
             "target": "index.js"
         }
     }
