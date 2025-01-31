@@ -70,6 +70,7 @@ async function run() {
                 case "C#": languages.add("csharp");break;
                 case "C++": languages.add("cpp");break;
                 case "Java": languages.add("java");break;
+                case "Kotlin": languages.add("kotlin");break;
                 case "JavaScript": languages.add("javascript");break;
                 case "Python": languages.add("python");break;
                 case "TypeScript": languages.add("javascript");break;                
