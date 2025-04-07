@@ -199,6 +199,8 @@ foreach ($scan in $scans) {
                 "Ref"               = $alert.gitRef
                 "Ecosystem"         = if ($alert.logicalLocations) { ($alert.logicalLocations[0].fullyQualifiedName -split ' ')[0] } else { $null }
                 "Dependency Type"   = if ($alert.logicalLocations) { $alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ? "Direct" : "Transitive" } else { $null }
+                "Secret Validity Status" = $alert.validityDetails?.validityStatus ?? $null
+                "Secret Validity Date" = $alert.validityDetails?.validityLastCheckedDate?.ToString("yyyy-MM-ddTHH:mm:ssZ") ?? $null
                 "Location Paths"    = ($alert | ForEach-Object { $_.physicalLocations | ForEach-Object { "$($_.filePath)$($_.region.lineStart ? ':' + $_.region.lineStart : '')$($_.versionControl.commitHash ? ' @ ' + $_.versionControl.commitHash.Substring(0, 8) : '')" } }) -join ","
                 "Logical Paths"     = if ($alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ) { "$(($alert.logicalLocations[0].fullyQualifiedName).Split(' ', 2)[1])" } else { ($alert | ForEach-Object { $_.logicalLocations | ForEach-Object { "$(if ($_.fullyQualifiedName) {($_.fullyQualifiedName).Split(' ', 2)[1]} else { $null })$($_.kind -match "rootDependency" ? '(root)' : '')" } }) -join "," }
             }
