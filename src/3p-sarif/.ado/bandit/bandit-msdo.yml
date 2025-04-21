@@ -1,0 +1,15 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: MicrosoftSecurityDevOps@1
+  inputs:
+    tools: 'bandit'
+
+- task: AdvancedSecurity-Publish@1
+  inputs:
+    SarifsInputDirectory: '$(Build.ArtifactStagingDirectory)/.gdn/'
+    Category: 'Bandit'    

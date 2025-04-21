@@ -1,0 +1,303 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: windows-latest
+
+steps:
+# https://github.com/security-code-scan/security-code-scan-add-action/blob/main/action.yml
+- pwsh: |
+        $ErrorActionPreference = "Stop";
+        [string]$SecurityCodeScanPackageName = 'SecurityCodeScan.VS2019'
+        [string]$SecurityCodeScanPackagePath = $null
+
+        # get the latest security code scan package version
+        $scs2019packages = Invoke-RestMethod -Uri "https://api-v2v3search-0.nuget.org/query?q=packageid:SecurityCodeScan.VS2019&top=true"
+        $SecurityCodeScanPackageVersion = ($scs2019packages.data.versions | Sort-Object  -Property version -Descending | Select-Object -First 1).version
+
+        # AzDO - set this variable for use downstream
+        Write-Host "##vso[task.setvariable variable=SecurityCodeScanPackageVersion]$SecurityCodeScanPackageVersion"
+
+        foreach ($projectFile in Get-ChildItem -Path . -Include *.csproj, *.vbproj -File -Recurse -Force) {
+
+          $project = [xml](Get-Content -LiteralPath $projectFile.FullName -Raw)
+          $propertyGroup = $project.CreateElement('PropertyGroup', $project.Project.NamespaceURI)
+
+          # redirect all warnings to analysis.sarif file
+          $errorLog = $project.CreateElement('ErrorLog', $project.Project.NamespaceURI)
+          $errorLog.InnerText = 'analysis.sarif'
+          $propertyGroup.AppendChild($errorLog) | Out-Null
+
+          # add AdditionalFileItemNames to enable scanning of web.config
+          # should we check if the AdditionalFileItemNames already exists?
+          $additionalFileItemNames = $project.CreateElement("AdditionalFileItemNames", $project.Project.NamespaceURI)
+          $additionalFileItemNames.InnerText = '$(AdditionalFileItemNames);Content'
+          $propertyGroup.AppendChild($additionalFileItemNames) | Out-Null
+
+          $project.Project.AppendChild($propertyGroup) | Out-Null
+          $project.Save($projectFile.FullName)
+
+          $packagesConfigFile = $projectFile.Directory.GetFileSystemInfos('packages.config')
+
+          # if the project is new .NET Core style or the old one, but uses PackageReference
+          if ($project.Project.Sdk -or ($project.Project.ItemGroup.PackageReference | Where-Object { $_ }) -or (-not $packagesConfigFile.Exists)) {
+            # delete existing SecurityCodeScan PackageReference entities
+            $project.Project.ItemGroup.PackageReference |
+            Where-Object Include -like 'SecurityCodeScan*' |
+            ForEach-Object { $_.SelectSingleNode('..').RemoveChild($_) | Out-Null }
+
+            $packageReference = $project.CreateElement('PackageReference')
+            $packageReferenceInclude = $project.CreateAttribute('Include')
+            $packageReferenceInclude.Value = $SecurityCodeScanPackageName
+            $packageReference.Attributes.Append($packageReferenceInclude) | Out-Null
+            $packageReferenceVersion = $project.CreateAttribute('Version')
+            $packageReferenceVersion.Value = $SecurityCodeScanPackageVersion
+            $packageReference.Attributes.Append($packageReferenceVersion) | Out-Null
+            $packageReferencePrivateAssets = $project.CreateAttribute('PrivateAssets')
+            $packageReferencePrivateAssets.Value = 'All'
+            $packageReference.Attributes.Append($packageReferencePrivateAssets) | Out-Null
+            $packageReferenceIncludeAssets = $project.CreateAttribute('IncludeAssets')
+            $packageReferenceIncludeAssets.Value = 'runtime; build; native; contentfiles; analyzers; buildtransitive'
+            $packageReference.Attributes.Append($packageReferenceIncludeAssets) | Out-Null
+            $itemGroup = $project.CreateElement('ItemGroup')
+            $itemGroup.AppendChild($packageReference) | Out-Null
+            $project.Project.AppendChild($itemGroup) | Out-Null
+
+            # create RestoreProjectStyle element
+            if (-not $project.Project.Sdk) {
+              $restoreProjectStyle = $project.CreateElement('RestoreProjectStyle')
+              $restoreProjectStyle.InnerText = 'PackageReference'
+              $propertyGroup = $project.CreateElement('PropertyGroup')
+              $propertyGroup.AppendChild($restoreProjectStyle) | Out-Null
+              $project.Project.AppendChild($propertyGroup) | Out-Null
+            }
+
+            $project.Save($projectFile.FullName)
+          }
+          else { # Old style Full DotNet Framework project with packages.config
+
+            # create or get the full path to the solution path directory
+            if (-not $SecurityCodeScanPackagePath) {
+              if (-not (Test-Path packages -PathType Container)) {
+                $SecurityCodeScanPackagePath = (New-Item -Name packages -ItemType Directory).FullName
+              }
+              else {
+                $SecurityCodeScanPackagePath = (Get-Item -Path packages).FullName
+              }
+            }
+
+            # delete existing SecurityCodeScan analyzer entities
+            $project.Project.ItemGroup.Analyzer |
+            Where-Object Include -like '*SecurityCodeScan*' |
+            ForEach-Object { $_.SelectSingleNode('..').RemoveChild($_) | Out-Null }
+
+            # create RestoreProjectStyle element
+            $restoreProjectStyle = $project.CreateElement('RestoreProjectStyle', $project.Project.NamespaceURI)
+            $restoreProjectStyle.InnerText = 'PackagesConfig'
+            $propertyGroup = $project.CreateElement('PropertyGroup', $project.Project.NamespaceURI)
+            $propertyGroup.AppendChild($restoreProjectStyle) | Out-Null
+            $project.Project.AppendChild($propertyGroup) | Out-Null
+
+            # create Analyzer elements
+            $itemGroup = $project.CreateElement('ItemGroup', $project.Project.NamespaceURI)
+
+            $analyzer = $project.CreateElement('Analyzer', $project.Project.NamespaceURI)
+            $analyzerInclude = $project.CreateAttribute('Include')
+            # since the changes to the project will be discarded it is ok to set a Full path to SecurityCodeScanPackagePath
+            $analyzerInclude.Value = Join-Path -Path $SecurityCodeScanPackagePath -ChildPath "$($SecurityCodeScanPackageName).$($SecurityCodeScanPackageVersion)\analyzers\dotnet\SecurityCodeScan.VS2019.dll"
+            $analyzer.Attributes.Append($analyzerInclude) | Out-Null
+            $itemGroup.AppendChild($analyzer) | Out-Null
+
+            $analyzer = $project.CreateElement('Analyzer', $project.Project.NamespaceURI)
+            $analyzerInclude = $project.CreateAttribute('Include')
+            $analyzerInclude.Value = Join-Path -Path $SecurityCodeScanPackagePath -ChildPath "$($SecurityCodeScanPackageName).$($SecurityCodeScanPackageVersion)\analyzers\dotnet\YamlDotNet.dll"
+            $analyzer.Attributes.Append($analyzerInclude) | Out-Null
+            $itemGroup.AppendChild($analyzer) | Out-Null
+
+            $project.Project.AppendChild($itemGroup) | Out-Null
+
+            $project.Save($projectFile.FullName)
+
+            $packagesConfig = [xml](Get-Content -LiteralPath $packagesConfigFile.FullName -Raw)
+
+            # delete existing SecurityCodeScan package entities
+            $packagesConfig.packages.package |
+            Where-Object id -like '*SecurityCodeScan*' |
+            ForEach-Object { $_.SelectSingleNode('..').RemoveChild($_) | Out-Null }
+
+            # create a SecurityCodeScan package entity
+            $package = $packagesConfig.CreateElement('package')
+            $packageId = $packagesConfig.CreateAttribute('id')
+            $packageId.Value = $SecurityCodeScanPackageName
+            $package.Attributes.Append($packageId) | Out-Null
+            $packageVersion = $packagesConfig.CreateAttribute('version')
+            $packageVersion.Value = $SecurityCodeScanPackageVersion
+            $package.Attributes.Append($packageVersion) | Out-Null
+            $packageDevelopmentDependency = $packagesConfig.CreateAttribute('developmentDependency')
+            $packageDevelopmentDependency.Value = 'true'
+            $package.Attributes.Append($packageDevelopmentDependency) | Out-Null
+
+            $packagesConfig.packages.AppendChild($package) | Out-Null
+
+            $packagesConfig.Save($packagesConfigFile.FullName)
+          }
+        }
+  displayName: Add SCS to projects
+
+- pwsh: |
+    nuget restore
+  displayName: NuGet Restore
+
+- task: MSBuild@1
+  inputs:
+    solution: '**/*.sln'
+
+
+- pwsh: |
+    Write-Host "Find SARIF"
+    Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse -Filter "*.sarif"    
+    Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse -Filter "*.sarif"
+    
+    # Copy all the sarif files (one per csproj/vbproj and upload them to a single folder for publishing)
+    $sourceDirectory = "$(Build.SourcesDirectory)"
+    $destinationRoot = "$(Agent.TempDirectory)/sarif-results"
+
+    Get-ChildItem -Path $sourceDirectory -Filter *.sarif -Recurse | ForEach-Object {
+        $relativePath = $_.FullName.Substring($sourceDirectory.Length).TrimStart('\')
+        $destinationDirectory = Join-Path $destinationRoot (Split-Path $relativePath -Parent)
+        New-Item -ItemType Directory -Path $destinationDirectory -Force
+        Copy-Item -Path $_.FullName -Destination $destinationDirectory
+    }
+
+  displayName: Find SARIF
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish SCS SARIF to Pipeline
+  inputs:
+    targetPath: "$(Agent.TempDirectory)/sarif-results"
+    artifact: 'artifacts-before'
+    publishLocation: 'pipeline'
+
+# SARIF multitool needs 3.1.0: https://github.com/microsoft/sarif-sdk/issues/2766
+    # You must install or update .NET to run this application.
+    # App: C:\Users\VssAdministrator\.dotnet\tools\sarif.exe
+    # Architecture: x64
+    # Framework: 'Microsoft.NETCore.App', version '3.1.0' (x64)
+    # .NET location: C:\Program Files\dotnet\
+- task: UseDotNet@2
+  inputs:
+    packageType: 'runtime'
+    version: '3.1.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+
+# https://github.com/security-code-scan/security-code-scan-results-action/blob/main/action.yml
+- bash: |
+    # Install Sarif.Multitool
+    dotnet tool install --global Sarif.Multitool --version 4.5.4
+
+    # Set the directories for SARIF files
+    sarifInputDir="$(Agent.TempDirectory)/sarif-results"  # Set the input directory for SARIF files
+    outputDir="$(Build.ArtifactStagingDirectory)/scs-results"
+    mkdir -p $outputDir
+
+    # Create the convert.js script
+    cat << 'EOF' > convert.js
+    const fs = require('fs')
+
+    var args = process.argv.slice(2);
+    var sarif = JSON.parse(fs.readFileSync(args[0], "utf8"));
+
+    for (run of sarif.runs) {      
+
+      run.tool.driver.name = "SecurityCodeScan";
+      run.tool.driver.fullName  = "Vulnerability Patterns Detector for C# and VB.NET";
+      run.tool.driver.informationUri  = "https://security-code-scan.github.io";
+      run.tool.driver.version  = "$(SecurityCodeScanPackageVersion)";
+      run.tool.driver.semanticVersion  = "$(SecurityCodeScanPackageVersion)";
+
+      run.results = run.results.filter((e => e.ruleId.startsWith("SCS")));
+      run.tool.driver.rules = run.tool.driver.rules.filter((e => e.id.startsWith("SCS")));
+
+      for (let i = 0; i < run.results.length; ++i) {
+        run.results[i].ruleIndex = undefined;
+        run.results[i].relatedLocations = undefined;
+
+        if (run.results[i].locations === undefined) {
+          const match = run.results[i].message.text.match(/(.*) in (.*)\((\d+)\)(:.*)/);
+          run.results[i].message.text = match[1];
+          run.results[i].locations = [{
+            "physicalLocation" : {
+              "artifactLocation" : {
+                "uri" : "file:///" + match[2].replace(/\\/g, "/")
+              },
+              "region" : {
+                "startLine": Number(match[3]),
+                "startColumn": 1,
+                "endLine": Number(match[3]),
+                "endColumn": 1
+              }
+            }
+          }];
+        }
+
+        // Replace "file:///D:/a/1/s/" with "" in every result[i].locations[].physicalLocation.artifactLocation.uri
+          if (run.results[i].locations) {
+            for (let loc of run.results[i].locations) {
+              if (loc.physicalLocation && loc.physicalLocation.artifactLocation && loc.physicalLocation.artifactLocation.uri) {
+                loc.physicalLocation.artifactLocation.uri = loc.physicalLocation.artifactLocation.uri.replace("file:///"+process.env.BUILD_SOURCESDIRECTORY.replace(/\\/g, "/")+"/", "");
+                loc.physicalLocation.artifactLocation.uriBaseId = "%SRCROOT%";
+              }
+            }
+          }
+      }
+
+      // Set originalUriBaseIds property ... checked codeql and not doing this: .replace(/\\/g, "/")
+        run.originalUriBaseIds = {
+          "%SRCROOT%": {
+            "uri": process.env.BUILD_SOURCESDIRECTORY
+          }
+        };
+
+      
+
+      for (rule of run.tool.driver.rules) {
+        rule.shortDescription = undefined; //TODO: This contains the template .. we should look this up from: https://github.com/security-code-scan/security-code-scan/tree/vs2019/website/rules
+        rule.help = { "text" : `\n\n${rule.fullDescription.text}\n\nSee ${rule.id} documentation: [${rule.helpUri}](${rule.helpUri})` };
+      }
+
+      run.language = undefined;
+    }
+
+    var converted = JSON.stringify(sarif, null, 2);
+    fs.writeFileSync(args[1], converted);
+    EOF
+
+    # Process SARIF files
+    i=0
+    for sarifFile in $(find $sarifInputDir -name '*.sarif')
+    do
+      echo "Processing file: $sarifFile"
+      sarif rewrite $sarifFile --output $sarifFile --sarif-output-version Current --log ForceOverwrite
+      node convert.js $sarifFile $sarifFile || exit 1
+      mv $sarifFile $outputDir/$((i++)).sarif
+    done
+  displayName: Convert SARIF
+
+
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Converted SCS SARIF to Pipeline
+  inputs:
+    targetPath: "$(Build.ArtifactStagingDirectory)"
+    artifact: 'artifacts-after'
+    publishLocation: 'pipeline'
+
+- task: AdvancedSecurity-Publish@1
+  inputs:
+    SarifsInputDirectory: '$(Build.ArtifactStagingDirectory)/scs-results'
+    Category: 'SCS'
