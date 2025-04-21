@@ -134,9 +134,10 @@ foreach ($scan in $scans) {
     try {
         $alerts = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -SkipHttpErrorCheck
         if ($alerts.StatusCode -ne 200) {
-            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/management/repo-enablement/get?view=azure-devops-rest-7.2
+            # Check to see if advanced security is enabled for the repo - https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/repo-enablement/get?view=azure-devops-rest-7.2
             $enablementurl = "https://advsec.dev.azure.com/{0}/{1}/_apis/management/repositories/{2}/enablement" -f $orgName, $project, $repository
             $repoEnablement = Invoke-WebRequest -Uri $enablementurl -Headers $headers -Method Get -SkipHttpErrorCheck
+            Write-Host "$($isAzdo ? '##[debug]' : '')⚠️ - Unable to access $alertUri ($($alerts.StatusCode) $($alerts.StatusDescription)) - Response from enablement endpoint: $enablementurl ($($repoEnablement.StatusCode) $($repoEnablement.StatusDescription))"
             $enablement = $repoEnablement.content | ConvertFrom-Json
 
             if (!$enablement.advSecEnabled) {
@@ -172,31 +173,36 @@ foreach ($scan in $scans) {
                 -and $alert.alertType -in $alertTypes) {
             # use a custom object so we can control sorting
             [pscustomobject]@{
-                "Alert Id"         = $alert.alertId
-                "Alert State"      = $alert.state
-                "Alert Title"      = $alert.title
-                "Alert Type"       = $alert.alertType
-                "Tool"             = ($alert.tools | Select-Object -ExpandProperty name) -join ","
-                "Rule Id"          = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty opaqueId) -join ","
-                "Rule Name"        = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty friendlyName) -join ","
-                "Rule Description" = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty description) -join ","
-                "Tags"             = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty tags) -join ","
-                "Severity"         = $alert.severity
-                "First Seen"       = $null -eq $alert.firstSeenDate ? "" : ($alert.lastSeenDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
-                "Last Seen"        = $null -eq $alert.lastSeenDate ? "" : ($alert.lastSeenDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
-                "Fixed On"         = $null -eq $alert.fixedDate ? "" : ($alert.fixedDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
-                "Dismissed On"     = $null -eq $alert.dismissal.requestedOn ? "" : ($alert.dismissal.requestedOn).ToString("yyyy-MM-ddTHH:mm:ssZ")
-                "Dismissal Type"   = $alert.dismissal.dismissalType
-                "SLA Days"         = $severityDays[$alert.severity]
-                "Days overdue"     = $alert.state -ne "active" ? 0 : [Math]::Max([int]((Get-Date).ToUniversalTime().AddDays(-$severityDays[$alert.severity]) - ($alert.firstSeenDate)).TotalDays, 0)
-                "Alert Link"       = "$($alert.repositoryUrl)/alerts/$($alert.alertId)"
-                "Organization"     = $orgName
-                "Project"          = $project
-                "Repository"       = $repository
-                "Ref"              = $alert.gitRef
-                "Ecosystem"        = if ($alert.logicalLocations) { ($alert.logicalLocations[0].fullyQualifiedName -split ' ')[0] } else { $null }
-                "Location Paths"   = ($alert | ForEach-Object { $_.physicalLocations | ForEach-Object { "$($_.filePath)$($_.region.lineStart ? ':' + $_.region.lineStart : '')$($_.versionControl.commitHash ? ' @ ' + $_.versionControl.commitHash.Substring(0, 8) : '')" } }) -join ","
-                "Logical Paths"    = if ($alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ) { "$(($alert.logicalLocations[0].fullyQualifiedName).Split(' ', 2)[1])" } else { ($alert | ForEach-Object { $_.logicalLocations | ForEach-Object { "$(if ($_.fullyQualifiedName) {($_.fullyQualifiedName).Split(' ', 2)[1]} else { $null })$($_.kind -match "rootDependency" ? '(root)' : '')" } }) -join "," }
+                "Alert Id"          = $alert.alertId
+                "Alert State"       = $alert.state
+                "Alert Title"       = $alert.title
+                "Alert Type"        = $alert.alertType
+                "Tool"              = ($alert.tools | Select-Object -ExpandProperty name) -join ","
+                "Rule Id"           = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty opaqueId) -join ","
+                "Rule Name"         = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty friendlyName) -join ","
+                "Rule Description"  = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty description) -join ","
+                "Tags"              = ($alert.tools | ForEach-Object { $_.rules } | Select-Object -ExpandProperty tags) -join ","
+                "Severity"          = $alert.severity
+                "First Seen"        = $null -eq $alert.firstSeenDate ? "" : ($alert.lastSeenDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                "Last Seen"         = $null -eq $alert.lastSeenDate ? "" : ($alert.lastSeenDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                "Fixed On"          = $null -eq $alert.fixedDate ? "" : ($alert.fixedDate).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                "Dismissed On"      = $null -eq $alert.dismissal.requestedOn ? "" : ($alert.dismissal.requestedOn).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                "Dismissed By"      = $alert.dismissal.stateChangedByIdentity.uniqueName
+                "Dismissal Type"    = $alert.dismissal.dismissalType
+                "Dismissal Message" = $alert.dismissal.message
+                "SLA Days"          = $severityDays[$alert.severity]
+                "Days overdue"      = $alert.state -ne "active" ? 0 : [Math]::Max([int]((Get-Date).ToUniversalTime().AddDays(-$severityDays[$alert.severity]) - ($alert.firstSeenDate)).TotalDays, 0)
+                "Alert Link"        = $null -eq $alert.gitRef ? "$($alert.repositoryUrl)/alerts/$($alert.alertId)" : "$($alert.repositoryUrl)/alerts/$($alert.alertId)?branch=$($alert.gitRef)"
+                "Organization"      = $orgName
+                "Project"           = $project
+                "Repository"        = $repository
+                "Ref"               = $alert.gitRef
+                "Ecosystem"         = if ($alert.logicalLocations) { ($alert.logicalLocations[0].fullyQualifiedName -split ' ')[0] } else { $null }
+                "Dependency Type"   = if ($alert.logicalLocations) { $alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ? "Direct" : "Transitive" } else { $null }
+                "Secret Validity Status" = $alert.validityDetails?.validityStatus ?? $null
+                "Secret Validity Date" = $alert.validityDetails?.validityLastCheckedDate?.ToString("yyyy-MM-ddTHH:mm:ssZ") ?? $null
+                "Location Paths"    = ($alert | ForEach-Object { $_.physicalLocations | ForEach-Object { "$($_.filePath)$($_.region.lineStart ? ':' + $_.region.lineStart : '')$($_.versionControl.commitHash ? ' @ ' + $_.versionControl.commitHash.Substring(0, 8) : '')" } }) -join ","
+                "Logical Paths"     = if ($alert.logicalLocations.Count -eq 2 -and $alert.logicalLocations[0].fullyQualifiedName -eq $alert.logicalLocations[1].fullyQualifiedName ) { "$(($alert.logicalLocations[0].fullyQualifiedName).Split(' ', 2)[1])" } else { ($alert | ForEach-Object { $_.logicalLocations | ForEach-Object { "$(if ($_.fullyQualifiedName) {($_.fullyQualifiedName).Split(' ', 2)[1]} else { $null })$($_.kind -match "rootDependency" ? '(root)' : '')" } }) -join "," }
             }
         }
     }
@@ -210,7 +216,18 @@ if ($alertList.Count -gt 0) {
     $reportName = [regex]::Replace($reportName, '[^\w\d.-]', '')
     $reportPath = [System.IO.Path]::Combine($isAzDO ? ${env:BUILD_ARTIFACTSTAGINGDIRECTORY} : $pwd, $reportName)
     #$alertList | Format-Table -AutoSize | Out-String | Write-Host
-    $alertList | Export-Csv -Path "$reportPath" -NoTypeInformation -Force
+
+    $sanitizedAlertList = $alertList | ForEach-Object {
+        $sanitizedAlert = $_.PSObject.Copy()
+        foreach ($property in $sanitizedAlert.PSObject.Properties) {
+            if ($property.Value -is [string] -and $property.Value -match '^[=+\-@]') {
+                $property.Value = "'$($property.Value)"
+            }
+        }
+        $sanitizedAlert
+    }
+    $sanitizedAlertList | Export-Csv -Path "$reportPath" -NoTypeInformation -Force
+
     if ($isAzdo) {
         Write-Host "##vso[artifact.upload artifactname=AdvancedSecurityReport]$reportPath"
     }
