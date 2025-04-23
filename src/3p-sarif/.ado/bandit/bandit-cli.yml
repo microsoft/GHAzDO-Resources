@@ -1,0 +1,26 @@
+trigger:
+- master
+pool:
+  vmImage: ubuntu-latest
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '>= 3.x'
+      addToPath: true
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  - script: |
+      pip install bandit[sarif]
+      bandit -r . -f sarif -o bandit-output.sarif
+    displayName: 'Run Bandit security checks'
+    continueOnError: true
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: 'bandit-output.sarif'
+      ArtifactName: 'bandit-results'
+  - task: AdvancedSecurity-Publish@1
+    inputs:
+      SarifsInputDirectory: '$(Build.SourcesDirectory)'
+      Category: 'Bandit'    

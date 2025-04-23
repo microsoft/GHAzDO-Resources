@@ -66,4 +66,4 @@ Obtain a [Personal Access Token (PAT)](https://learn.microsoft.com/en-us/azure/d
 
 ### Report Output
 
-- See: [Sample Report](./ghazdo-report-20240325.1.csv)
+- See: [Sample Report](./ghazdo-report-20240814.1.csv)
