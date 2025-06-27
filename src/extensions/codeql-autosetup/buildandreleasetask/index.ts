@@ -63,17 +63,25 @@ async function run() {
 
         language.forEach(lang => {
             console.log(`Language: ${lang.name}`);
+
+
+            // Add just the languages supported by CodeQL
             switch(lang.name){
-                case "Ruby": languages.add("ruby");break;
+                case "C#": languages.add("csharp");break;
+                case "C++": languages.add("cpp");break;
+                case "Java": languages.add("java");break;
+                case "Kotlin": languages.add("java");break;
                 case "JavaScript": languages.add("javascript");break;
                 case "Python": languages.add("python");break;
-                case "TypeScript": languages.add("javascript");break;
-                case "ruby": languages.add("ruby");break;
+                case "TypeScript": languages.add("javascript");break;                
+                case "Ruby": languages.add("ruby");break;
+                case "Swift": languages.add("swift");break;                
                 case "go": languages.add("go");break;
                 case "golang": languages.add("go");break;
                 default: break;
             }
-            //console.log(languages);
+
+            console.log(languages);
         });
 
         if (languages.size > 0) {
@@ -82,9 +90,13 @@ async function run() {
             let strArray = new Array<string>();
             languages.forEach(lang => {strArray.push(lang)});
             languageList = strArray.join(",");
+            
             tl.setVariable('AdvancedSecurity.CodeQL.Language', languageList);
-            //console.log(`Language List: ${languageList}`);
+            console.log(`Language List: ${languageList}`);
             tl.setVariable('AdvancedSecurity.CodeQL.Autoconfig', 'true');
+
+            
+
         }
         else {
             tl.setVariable('AdvancedSecurity.CodeQL.Autoconfig', 'false');
