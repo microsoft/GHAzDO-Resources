@@ -1,0 +1,49 @@
+{
+  "alertId": 739,
+  "severity": "high",
+  "title": "SQL query built from user-controlled sources (cs/sql-injection)",
+  "tools": [
+    {
+      "name": "CodeQL",
+      "rules": [
+        {
+          "opaqueId": "cs/sql-injection",
+          "friendlyName": "cs/sql-injection",
+          "description": "Building a SQL query from user-controlled sources is vulnerable to insertion of malicious SQL code by the user.",
+          "resources": "\n* MSDN: [How To: Protect From SQL Injection in ASP.NET](https://msdn.microsoft.com/en-us/library/ff648339.aspx).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n",
+          "helpMessage": "# SQL query built from user-controlled sources\nIf a SQL query is built using string concatenation, and the components of the concatenation include user input, a user is likely to be able to run malicious database queries.\n\n\n## Recommendation\nUsually, it is better to use a prepared statement than to build a complete query with string concatenation. A prepared statement can include a parameter, written as either a question mark (`?`) or with an explicit name (`@parameter`), for each part of the SQL query that is expected to be filled in by a different value each time it is run. When the query is later executed, a value must be supplied for each parameter in the query.\n\nIt is good practice to use prepared statements for supplying parameters to a query, whether or not any of the parameters are directly traceable to user input. Doing so avoids any need to worry about quoting and escaping.\n\n\n## Example\nIn the following example, the code runs a simple SQL query in three different ways.\n\nThe first way involves building a query, `query1`, by concatenating a user-supplied text box value with some string literals. The text box value can include special characters, so this code allows for SQL injection attacks.\n\nThe second way uses a stored procedure, `ItemsStoredProcedure`, with a single parameter (`@category`). The parameter is then given a value by calling `Parameters.Add`. This version is immune to injection attacks, because any special characters are not given any special treatment.\n\nThe third way builds a query, `query2`, with a single string literal that includes a parameter (`@category`). The parameter is then given a value by calling `Parameters.Add`. This version is immune to injection attacks, because any special characters are not given any special treatment.\n\n\n```csharp\nusing System.Data;\nusing System.Data.SqlClient;\nusing System.Web.UI.WebControls;\n\nclass SqlInjection\n{\n    TextBox categoryTextBox;\n    string connectionString;\n\n    public DataSet GetDataSetByCategory()\n    {\n        // BAD: the category might have SQL special characters in it\n        using (var connection = new SqlConnection(connectionString))\n        {\n            var query1 = \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY='\"\n              + categoryTextBox.Text + \"' ORDER BY PRICE\";\n            var adapter = new SqlDataAdapter(query1, connection);\n            var result = new DataSet();\n            adapter.Fill(result);\n            return result;\n        }\n\n        // GOOD: use parameters with stored procedures\n        using (var connection = new SqlConnection(connectionString))\n        {\n            var adapter = new SqlDataAdapter(\"ItemsStoredProcedure\", connection);\n            adapter.SelectCommand.CommandType = CommandType.StoredProcedure;\n            var parameter = new SqlParameter(\"category\", categoryTextBox.Text);\n            adapter.SelectCommand.Parameters.Add(parameter);\n            var result = new DataSet();\n            adapter.Fill(result);\n            return result;\n        }\n\n        // GOOD: use parameters with dynamic SQL\n        using (var connection = new SqlConnection(connectionString))\n        {\n            var query2 = \"SELECT ITEM,PRICE FROM PRODUCT WHERE ITEM_CATEGORY=\"\n              + \"@category ORDER BY PRICE\";\n            var adapter = new SqlDataAdapter(query2, connection);\n            var parameter = new SqlParameter(\"category\", categoryTextBox.Text);\n            adapter.SelectCommand.Parameters.Add(parameter);\n            var result = new DataSet();\n            adapter.Fill(result);\n            return result;\n        }\n    }\n}\n\n```\n\n## References\n* MSDN: [How To: Protect From SQL Injection in ASP.NET](https://msdn.microsoft.com/en-us/library/ff648339.aspx).\n* Common Weakness Enumeration: [CWE-89](https://cwe.mitre.org/data/definitions/89.html).\n",
+          "tags": [
+            "security",
+            "external/cwe/cwe-089"
+          ],
+          "additionalProperties": {}
+        }
+      ]
+    }
+  ],
+  "dismissal": null,
+  "repositoryUrl": "https://dev.azure.com/octodemo-felickz/8fbc37c7-2ed6-4b1a-b8fb-8b2b0e4f7008/_git/3f23799f-58a1-416f-a747-117e611a301a",
+  "gitRef": "refs/heads/main",
+  "alertType": "code",
+  "firstSeenDate": "2024-05-16T01:38:11.8554121Z",
+  "lastSeenDate": "2024-05-16T02:08:50.6903065Z",
+  "fixedDate": null,
+  "introducedDate": "2024-05-16T01:35:47Z",
+  "state": "active",
+  "physicalLocations": [
+    {
+      "versionControl": {
+        "commitHash": "15da62abc7b3a6a2ee85e54c8cd4090c69e7e683",
+        "itemUrl": "https://dev.azure.com:443/octodemo-felickz/8fbc37c7-2ed6-4b1a-b8fb-8b2b0e4f7008/_git/3f23799f-58a1-416f-a747-117e611a301a?path=%2FConsoleApp1%2FVulnerableDataAccess.cs&version=GC15da62abc7b3a6a2ee85e54c8cd4090c69e7e683&line=19&lineEnd=19&lineStartColumn=60&lineEndColumn=65&lineStyle=plain"
+      },
+      "filePath": "ConsoleApp1/VulnerableDataAccess.cs",
+      "region": {
+        "lineStart": 19,
+        "lineEnd": 0,
+        "columnStart": 60,
+        "columnEnd": 65
+      }
+    }
+  ],
+  "logicalLocations": []
+}
