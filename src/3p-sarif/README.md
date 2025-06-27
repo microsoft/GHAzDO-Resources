@@ -26,8 +26,9 @@ The AdvancedSecurity-Publish@1 task allows you to easily retrieve results from t
 
 The following samples provide boilerplate code to integrate with 3rd party code scanning tools into an Azure DevOps pipelines and upload their scan results into Advanced Security Code Scanning. 
 
-- Bandit
-- Brakeman
-- PMD
-- Psalm
-- Security Code Scan
+- [Bandit](./.ado/bandit/)
+- [Brakeman](./.ado/brakeman/)
+- [Opengrep](./.ado/opengrep/)
+- [PMD](./.ado/pmd/)
+- [Psalm](./.ado/psalm/)
+- [Security Code Scan](./.ado/security-code-scan/)

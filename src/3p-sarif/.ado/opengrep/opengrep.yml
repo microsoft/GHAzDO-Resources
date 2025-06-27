@@ -1,0 +1,35 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- script: |
+    set -e
+    echo "[+] Fetching latest Opengrep release information"
+    API_URL="https://api.github.com/repos/opengrep/opengrep/releases/latest"
+    ASSET_NAME="opengrep_manylinux_x86"
+    DOWNLOAD_URL=$(curl -s $API_URL | jq -r ".assets[] | select(.name==\"${ASSET_NAME}\") | .browser_download_url")
+    if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
+      echo "Could not find download URL for $ASSET_NAME"
+      exit 1
+    fi
+    echo "[+] Downloading Opengrep from $DOWNLOAD_URL"
+    curl -sSfL -o "/usr/local/bin/opengrep" "$DOWNLOAD_URL"
+    chmod +x /usr/local/bin/opengrep
+    echo "[+] Finished installing opengrep"
+  displayName: 'Download / Install Opengrep (Latest)'
+
+- script: opengrep scan --metrics=on --sarif-output ./results.sarif .
+  displayName: 'Run Opengrep'
+
+- task: AdvancedSecurity-Publish@1
+  inputs:
+    SarifsInputDirectory: '.'
