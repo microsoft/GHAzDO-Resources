@@ -15,6 +15,8 @@
   -ProjectName: Optional. If omitted, script runs org-wide.
   -Pat: Personal Access Token with Advanced Security permissions.
   -AgentPoolName: Optional. Defaults to 'AdvancedSecurityPool'.
+  -WhatIf: Optional. Shows what would happen if the script runs, without making changes.
+  -Confirm: Optional. Prompts for confirmation before making changes.
 
 .EXAMPLE
   # Project-scoped execution
@@ -119,7 +121,8 @@ foreach ($projectKey in $reposByProject.Keys) {
         })
     }
 
-    if ($PSCmdlet.ShouldProcess("$OrgName/$projectKey", "Enabling Advanced Security features")) {
+    $actionDescription = "Enabling Advanced Security features for $($projectRepos.Count) repositories: $(($projectRepos | ForEach-Object { $_.name }) -join ', ')"
+    if ($PSCmdlet.ShouldProcess("$OrgName/$projectKey", $actionDescription)) {
         # ------------ Send Enablement Request for this project ------------
         $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
     
