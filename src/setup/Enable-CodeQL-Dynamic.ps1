@@ -3,6 +3,12 @@
   One-click CodeQL enablement using dynamic pipelines.
   - No YAML injection or manual pipeline creation.
   - Enables Advanced Security + CodeQL for supported languages.
+  - Supports -WhatIf and -Confirm parameters for safe execution.
+
+.DESCRIPTION
+  This script enables Advanced Security and CodeQL scanning for repositories in Azure DevOps using dynamic pipelines.
+  It supports the -WhatIf and -Confirm parameters, allowing users to preview actions without making changes (-WhatIf)
+  and to confirm before performing actions (-Confirm), as provided by SupportsShouldProcess.
 
 .PARAMETERS
   -OrgName: Azure DevOps organization name.
@@ -16,8 +22,13 @@
 
   # Org-wide execution (all projects)
   .\Enable-CodeQL-Dynamic.ps1 -OrgName "contoso" -Pat "<PAT>"
+
+.NOTES
+  Use -WhatIf to see what changes would be made without applying them.
+  Use -Confirm to prompt for confirmation before making changes.
 #>
 
+[CmdletBinding(SupportsShouldProcess)]
 param(
   [Parameter(Mandatory = $true)]
   [string] $OrgName,
@@ -98,9 +109,9 @@ foreach ($projectKey in $reposByProject.Keys) {
             }
         }
 
-        $report.Add([pscustomobject]@{
-            Timestamp  = (Get-Date)
-            Project    = $projectKey
+    if ($PSCmdlet.ShouldProcess("https://advsec.dev.azure.com/$OrgName/$projectKey", "Enabling Advanced Security features")) {
+        # ------------ Send Enablement Request for this project ------------
+        $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
             Repository = $repo.name
             RepoId     = $repo.id
             Action     = "Prepared for enablement"
@@ -108,29 +119,31 @@ foreach ($projectKey in $reposByProject.Keys) {
         })
     }
 
-    # ------------ Send Enablement Request for this project ------------
-    $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
-
-    try {
-        $body = $enablementPayload | ConvertTo-Json -Depth 5
-        Invoke-RestMethod -Uri $enableUrl -Method Patch -Headers $headers -Body $body
-        Write-Host "Successfully enabled Advanced Security features for all repositories in project: $projectKey"
-
-        # Update report entries for this project
-        foreach ($entry in $report) {
-            if ($entry.Project -eq $projectKey -and $entry.Result -eq "Pending") {
-                $entry.Result = "Success"
-                $entry.Action = "Enabled"
+    if ($PSCmdlet.ShouldProcess("https://dev.azure.com/$OrgName/$projectKey", "Enabling Advanced Security features")) {
+        # ------------ Send Enablement Request for this project ------------
+        $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
+    
+        try {
+            $body = $enablementPayload | ConvertTo-Json -Depth 5
+            Invoke-RestMethod -Uri $enableUrl -Method Patch -Headers $headers -Body $body
+            Write-Host "Successfully enabled Advanced Security features for all repositories in project: $projectKey"
+    
+            # Update report entries for this project
+            foreach ($entry in $report) {
+                if ($entry.Project -eq $projectKey -and $entry.Result -eq "Pending") {
+                    $entry.Result = "Success"
+                    $entry.Action = "Enabled"
+                }
             }
-        }
-    } catch {
-        Write-Warning "Enablement failed for project $projectKey : $($_.Exception.Message)"
-        
-        # Update report entries for this project
-        foreach ($entry in $report) {
-            if ($entry.Project -eq $projectKey -and $entry.Result -eq "Pending") {
-                $entry.Result = "Failed: $($_.Exception.Message)"
-                $entry.Action = "Enablement"
+        } catch {
+            Write-Warning "Enablement failed for project $projectKey : $($_.Exception.Message)"
+            
+            # Update report entries for this project
+            foreach ($entry in $report) {
+                if ($entry.Project -eq $projectKey -and $entry.Result -eq "Pending") {
+                    $entry.Result = "Failed: $($_.Exception.Message)"
+                    $entry.Action = "Enablement"
+                }
             }
         }
     }
