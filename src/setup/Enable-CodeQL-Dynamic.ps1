@@ -30,7 +30,7 @@
   Use -Confirm to prompt for confirmation before making changes.
 #>
 
-[CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
 param(
   [Parameter(Mandatory = $true)]
   [string] $OrgName,
@@ -121,7 +121,13 @@ foreach ($projectKey in $reposByProject.Keys) {
         })
     }
 
-    $actionDescription = "Enabling Advanced Security features for $($projectRepos.Count) repositories: $(($projectRepos | ForEach-Object { $_.name }) -join ', ')"
+    $maxReposToShow = 10
+    $repoNamesToShow = $projectRepos | Select-Object -First $maxReposToShow | ForEach-Object { $_.name }
+    $repoNamesString = $repoNamesToShow -join ', '
+    if ($projectRepos.Count -gt $maxReposToShow) {
+        $repoNamesString += ", ...and $($projectRepos.Count - $maxReposToShow) more"
+    }
+    $actionDescription = "Enabling Advanced Security features for $($projectRepos.Count) repositories: $repoNamesString"
     if ($PSCmdlet.ShouldProcess("$OrgName/$projectKey", $actionDescription)) {
         # ------------ Send Enablement Request for this project ------------
         $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
