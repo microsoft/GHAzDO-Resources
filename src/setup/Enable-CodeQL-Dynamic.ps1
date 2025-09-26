@@ -109,9 +109,9 @@ foreach ($projectKey in $reposByProject.Keys) {
             }
         }
 
-    if ($PSCmdlet.ShouldProcess("https://advsec.dev.azure.com/$OrgName/$projectKey", "Enabling Advanced Security features")) {
-        # ------------ Send Enablement Request for this project ------------
-        $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
+        $report.Add([pscustomobject]@{
+            Timestamp  = (Get-Date)
+            Project    = $projectKey
             Repository = $repo.name
             RepoId     = $repo.id
             Action     = "Prepared for enablement"
@@ -119,7 +119,7 @@ foreach ($projectKey in $reposByProject.Keys) {
         })
     }
 
-    if ($PSCmdlet.ShouldProcess("https://dev.azure.com/$OrgName/$projectKey", "Enabling Advanced Security features")) {
+    if ($PSCmdlet.ShouldProcess("https://advsec.dev.azure.com/$OrgName/$projectKey", "Enabling Advanced Security features")) {
         # ------------ Send Enablement Request for this project ------------
         $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
     
