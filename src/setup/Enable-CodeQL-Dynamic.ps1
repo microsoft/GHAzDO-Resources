@@ -28,7 +28,7 @@
   Use -Confirm to prompt for confirmation before making changes.
 #>
 
-[CmdletBinding(SupportsShouldProcess)]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact='Medium')]
 param(
   [Parameter(Mandatory = $true)]
   [string] $OrgName,
@@ -119,7 +119,7 @@ foreach ($projectKey in $reposByProject.Keys) {
         })
     }
 
-    if ($PSCmdlet.ShouldProcess("https://advsec.dev.azure.com/$OrgName/$projectKey", "Enabling Advanced Security features")) {
+    if ($PSCmdlet.ShouldProcess("$OrgName/$projectKey", "Enabling Advanced Security features")) {
         # ------------ Send Enablement Request for this project ------------
         $enableUrl = "https://advsec.dev.azure.com/$OrgName/$projectKey/_apis/management/repositories/enablement?api-version=$enablementApiVersion"
     
