@@ -1,6 +1,6 @@
-# This script is used as part of our PR gating strategy. It takes advantage of the GHAzDO REST API to check for Code Scanning and Dependency Scanning issues a PR source and target branch.
+# This script is used as part of our PR gating strategy. It takes advantage of the GHAzDO REST API to check for Code Scanning, Dependency Scanning, and Secret Scanning issues in a PR source and target branch.
 # If there are 'new' issues in the source branch, the script will fail with error code 1.
-# The script will also log errors, 1 per new Code Scanning/Dependency alert, it will also add PR annotations for the alert
+# The script will also log errors, 1 per new Code Scanning/Dependency/Secret alert, it will also add PR annotations for the alert
 $pat = ${env:MAPPED_ADO_PAT}
 $orgUri = ${env:SYSTEM_COLLECTIONURI}
 $orgName = $orgUri -replace "^https://dev.azure.com/|/$"
@@ -15,24 +15,61 @@ $sourceDir = ${env:BUILD_SOURCESDIRECTORY}
 $headers = @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(($pat.Contains(":") ? $pat : ":$pat"))))" }
 #Get-ChildItem Env: | Format-Table -AutoSize
 
-#GATING POLICY - Which alerts to check for and which severities to include
-$alertTypes = @("dependency", "code")
+#GATING POLICY - Which alerts to check for and which severity/confidence to include
+$alertTypes = @("dependency", "code", "secret")
 $severityPolicy = @{
     "dependency" = @("critical", "high", "medium", "low")
     "code"       = @("critical", "high", "medium", "low", "error", "warning", "note" ) #Security and Quality Severities
+    "secret"     = @("high", "other") # Security Severity is always critical - use Confidence levels to filter instead
+}
+$commentPolicy = @{
+    "dependency" = $false # Natively supported https://devblogs.microsoft.com/devops/introducing-pull-request-annotation-for-codeql-and-dependency-scanning-in-github-advanced-security-for-azure-devops/
+    "code"       = $false # Natively supported https://devblogs.microsoft.com/devops/introducing-pull-request-annotation-for-codeql-and-dependency-scanning-in-github-advanced-security-for-azure-devops/
+    "secret"     = $true
 }
 
 # Alerts - List api: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list (criteria.states = 1 means open alerts, criteria.alertType does not support multiple values, so we need to allow default and filter out later)
 $urlTargetAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prTargetBranch
 $urlSourceAlerts = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.ref={3}&criteria.states=1" -f $orgName, $project, $repositoryId, $prSourceBranch
-
+# Secret alerts - separate API call without branch filtering since secrets are not branch-specific - confidence levels (high and other) to get all secret alerts
+$urlAlertsSecrets = "https://advsec.dev.azure.com/{0}/{1}/_apis/Alert/repositories/{2}/Alerts?top=500&orderBy=lastSeen&criteria.alertType=secret&criteria.states=1&criteria.confidenceLevels=high&criteria.confidenceLevels=other" -f $orgName, $project, $repositoryId
 #PR Threads - Create api: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/create
 $urlComment = "https://dev.azure.com/{0}/{1}/_apis/git/repositories/{2}/pullRequests/{3}/threads?api-version=7.1-preview.1" -f $orgName, $project, $repositoryId, $prId
 #PR Iteration Changes - Get API: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-iteration-changes/get
 $urlIteration = "https://dev.azure.com/{0}/{1}/_apis/git/repositories/{2}/pullRequests/{3}/iterations/{4}/changes?api-version=7.1-preview.1&`$compareTo={5}" -f $orgName, $project, $repositoryId, $prId, $prCurrentIteration, ($prCurrentIteration - 1)
+#PR Commits - Get API: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-commits/get-pull-request-commits
+$urlPRCommits = "https://dev.azure.com/{0}/{1}/_apis/git/repositories/{2}/pullRequests/{3}/commits?api-version=7.2-preview.1" -f $orgName, $project, $repositoryId, $prId
+
+# Check if a secret alert was introduced in any of the PR commits
+function IsSecretInPRCommits($secretAlert, $prCommits) {
+    # Get all commit hashes from the secret alert's physical locations
+    $alertCommitHashes = $secretAlert.physicalLocations | ForEach-Object {
+        if ($_.versionControl.commitHash) {
+            $_.versionControl.commitHash
+        }
+    } | Select-Object -Unique
+
+    # Get all commit hashes from the PR
+    $prCommitHashes = $prCommits | Select-Object -ExpandProperty commitId
+
+    # Check if any of the alert's commit hashes are in the PR commits
+    $matchingCommits = $alertCommitHashes | Where-Object { $prCommitHashes -contains $_ }
+
+    if ($matchingCommits.Count -gt 0) {
+        Write-Host "##[debug] Secret alert #$($secretAlert.alertId) found in PR commits: $($matchingCommits -join ', ')"
+        return $true
+    }
+
+    return $false
+}
 
 # Add a PR annotations for the Alert in the changed file.  This is only intended for alerts where the alert intersects with source code found in the PR diff.
 function AddPRComment($prAlert, $urlAlert) {
+    if ($commentPolicy[$prAlert.alertType] -eq $false) {
+        Write-Host "##[debug] Not adding PR comment for $($prAlert.alertType) alert #$($prAlert.alertId) as this is natively supported by AzDO."
+        return
+    }
+
     $pathToCheck = $prAlert.physicalLocations[-1].filePath
 
     ## Todo - potentially improve this for transitive dependencies by walking the path to parent(will need to dedup as Dependency scanning will report findings on transitive manifests such as /node_modules/x/package.json )
@@ -42,7 +79,7 @@ function AddPRComment($prAlert, $urlAlert) {
         $sourceDirSegment = $sourceDir.Split([System.IO.Path]::DirectorySeparatorChar)[-1]
         $pathToCheck = $pathToCheck.TrimStart($sourceDirSegment)
     }
-    elseif($prAlert.alertType -eq "code") {
+    elseif ($prAlert.alertType -eq "code" -or $prAlert.alertType -eq "secret") {
         $pathToCheck = "/" + $pathToCheck
     }
 
@@ -72,7 +109,7 @@ function AddPRComment($prAlert, $urlAlert) {
             )
             "status"                   = 1
             "threadContext"            = @{
-                "filePath"       = "./$($prAlert.physicalLocations[-1].filePath)"
+                "filePath" = "./$($prAlert.physicalLocations[-1].filePath)"
             }
             "pullRequestThreadContext" = @{
                 "changeTrackingId" = $($iterationItem.changeTrackingId)
@@ -83,7 +120,7 @@ function AddPRComment($prAlert, $urlAlert) {
             }
         }
     }
-    elseif($prAlert.alertType -eq "code") {
+    elseif ($prAlert.alertType -eq "code" -or $prAlert.alertType -eq "secret") {
         $lineEnd = $($prAlert.physicalLocations[-1].region.lineEnd)
         $lineStart = $($prAlert.physicalLocations[-1].region.lineStart)
 
@@ -91,11 +128,36 @@ function AddPRComment($prAlert, $urlAlert) {
             $lineEnd = $lineStart
         }
 
+        # Format title based on alert type - for secrets, add identifier
+        # Color mapping for severity levels
+        $severityColors = @{
+            "critical" = "#d73a49"  # Red
+            "high"     = "#d73a49"  # Red
+            "error"    = "#d73a49"  # Red
+            "medium"   = "#fb8c00"  # Orange
+            "warning"  = "#fb8c00"  # Orange
+            "other"    = "#fb8c00"  # Orange
+            "low"      = "#f1c40f"  # Yellow
+            "note"     = "#f1c40f"  # Yellow
+        }
+
+        $alertTitle = "#$($prAlert.alertId) $($prAlert.title)"
+        if ($prAlert.alertType -eq "secret" -and $prAlert.tools -and $prAlert.tools[0].rules -and $prAlert.tools[0].rules[0].opaqueId) {
+            $confidenceColor = $severityColors[$prAlert.confidence.ToLower()]
+            if (-not $confidenceColor) { $confidenceColor = "#6c757d" }  # Default gray
+            $alertTitle = "$alertTitle ($($prAlert.tools[0].rules[0].opaqueId)) <span style='background-color: $confidenceColor; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: bold;'>$($prAlert.confidence.ToUpper())</span>"
+        }
+        else {
+            $severityColor = $severityColors[$prAlert.severity.ToLower()]
+            if (-not $severityColor) { $severityColor = "#6c757d" }  # Default gray
+            $alertTitle = "$alertTitle <span style='background-color: $severityColor; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: bold;'>$($prAlert.severity.ToUpper())</span>"
+        }
+
         # Define the Body hashtable
         $body = @{
             "comments"                 = @(
                 @{
-                    "content"     = "**$($prAlert.title)**
+                    "content"     = "**$($alertTitle)**
                     $($prAlert.tools.rules.description)
                     See details [here]($($urlAlert))"
                     "commentType" = 1
@@ -131,12 +193,12 @@ function AddPRComment($prAlert, $urlAlert) {
     $response = Invoke-RestMethod -Uri $urlComment -Method Post -Headers $headers -Body $bodyJson -ContentType "application/json"
 
     #Write-Output $response
-    Write-Host "##[debug] New thread created in PR:Iteration $prCurrentIteration : $($response._links.self.href)"
+    Write-Host "##[debug] New thread created for alert $($prAlert.alertId) in PR:Iteration $prCurrentIteration : $($response._links.self.href)"
 
     return
 }
 
-Write-Host "Will check to see if there are any new Dependency or Code scanning alerts in this PR branch"
+Write-Host "Will check to see if there are any new $($alertTypes -join ', ') alerts in this PR branch"
 Write-Host "PR source : $($prSourceBranch). PR target: $($prTargetBranch)"
 
 if ($buildReason -ne 'PullRequest') {
@@ -196,17 +258,28 @@ $jsonPRSource = ($alertsPRSource.Content | ConvertFrom-Json).value | Where-Objec
 $prTargetAlertIds = $jsonPRTarget | Select-Object -ExpandProperty alertId
 $prSourceAlertIds = $jsonPRSource | Select-Object -ExpandProperty alertId
 
-# Check for alert ids that are reported in the PR source branch but not the pr target branch
-$newAlertIds = Compare-Object $prSourceAlertIds $prTargetAlertIds -PassThru | Where-Object { $_.SideIndicator -eq '<=' }
-$dependencyAlerts = $codeAlerts = 0
+# Check for alert ids that are reported in the PR source branch but not the pr target branch (for code and dependency alerts only)
+# Handle cases where either collection might be null or empty
+if ($prSourceAlertIds -and $prTargetAlertIds) {
+    $newAlertIds = Compare-Object $prSourceAlertIds $prTargetAlertIds -PassThru | Where-Object { $_.SideIndicator -eq '<=' }
+}
+elseif ($prSourceAlertIds) {
+    # All source alerts are new since target has no alerts
+    $newAlertIds = $prSourceAlertIds
+}
+else {
+    # No source alerts, so no new alerts
+    $newAlertIds = @()
+}
+$dependencyAlerts = $codeAlerts = $secretAlerts = 0
 
-# Are there any new alert ids in the PR source branch?
+# Are there any new alert ids in the PR source branch (for code and dependency alerts)?
 if ($newAlertIds.length -gt 0) {
-    Write-Host "##[warning] The code changes in this PR looks to be introducing new security alerts:"
+    Write-Host "##[warning] The code changes in this PR looks to be introducing new code/dependency security alerts:"
 
-    # Loop over the objects in the prAlerts JSON object
+    # Loop over the objects in the prAlerts JSON object (excluding secrets, which are handled separately)
     foreach ($prAlert in $jsonPRSource) {
-        if ($newAlertIds -contains $prAlert.alertId) {
+        if ($newAlertIds -contains $prAlert.alertId -and $prAlert.alertType -ne "secret") {
 
             #check to see $alert.severity in $severityPolicy for given alertType - valid severities: https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/alerts/list#severity
             if ($severityPolicy[$prAlert.alertType] -notcontains $prAlert.severity) {
@@ -232,17 +305,73 @@ if ($newAlertIds.length -gt 0) {
         }
     }
 
-    if ($dependencyAlerts + $codeAlerts -gt 0) {
-        Write-Host
-        Write-Host "##[error] Dissmiss or fix failing alerts listed (dependency #: $dependencyAlerts / code #: $codeAlerts ) and try re-queue the CIVerify task."
-        exit 1 #TODO - dynamically pass/fail the build only if a PR comment was added, indicating that there are new alerts that were directly created by this PR.  Since we do incremental PR iteration based comments this is not currently viable.
-    }
-    else {
-        Write-Host "##[warning] New alerts detected but none that violate policy - all is fine though these will appear in the Advanced Security UI."
-        exit 0
+    if ($dependencyAlerts + $codeAlerts -eq 0) {
+        Write-Host "##[warning] New code/dependency alerts detected but none that violate policy - all is fine though these will appear in the Advanced Security UI."
     }
 }
+
+# Check for secret alerts separately - they don't follow branch-based detection
+if ($alertTypes -contains 'secret') {
+
+    # Get secret alerts separately (api used for code/dependency with `ref` filter will not return any secret alerts)
+    $alertsSecrets = Invoke-WebRequest -Uri $urlAlertsSecrets -Headers $headers -Method Get
+
+    if ($alertsSecrets.StatusCode -ne 200) {
+        Write-Host "##vso[task.logissue type=error] Error getting secret alerts from Azure DevOps Advanced Security:", $alertsSecrets.StatusCode, $alertsSecrets.StatusDescription
+        exit 1
+    }
+
+    # Get PR commits for secret scanning validation
+    $prCommits = @()
+    try {
+        $prCommitsResponse = Invoke-WebRequest -Uri $urlPRCommits -Headers $headers -Method Get
+        if ($prCommitsResponse.StatusCode -eq 200) {
+            $prCommits = ($prCommitsResponse.Content | ConvertFrom-Json).value
+            Write-Host "##[debug] Retrieved $($prCommits.Count) commits from PR #$prId"
+        }
+        else {
+            Write-Host "##[warning] Could not retrieve PR commits (Status: $($prCommitsResponse.StatusCode)). Secret scanning validation may be limited."
+        }
+    }
+    catch {
+        Write-Host "##[warning] Error retrieving PR commits: $($_.Exception.Message). Secret scanning validation may be limited."
+    }
+
+    # Check each secret alert to see if it is in any of the PR commits
+    if ($prCommits.Count -gt 0) {
+        $allSecretAlerts = ($alertsSecrets.Content | ConvertFrom-Json).value
+        foreach ($secretAlert in $allSecretAlerts) {
+            if ((IsSecretInPRCommits $secretAlert $prCommits)) {
+                # Check severity/confidence policy
+                if ($severityPolicy[$secretAlert.alertType] -contains $secretAlert.confidence) {
+                    Write-Host ""
+                    $commitInfo = $secretAlert.physicalLocations[-1].versionControl.commitHash ? " @ commit $($secretAlert.physicalLocations[-1].versionControl.commitHash.Substring(0, 8))" : ""
+                    Write-Host "##vso[task.logissue type=error;sourcepath=$($secretAlert.physicalLocations[-1].filePath);linenumber=$($secretAlert.physicalLocations[-1].region.lineStart);columnnumber=$($secretAlert.physicalLocations[-1].region.columnStart)] $($secretAlert.severity) severity $($secretAlert.alertType) alert detected #$($secretAlert.alertId) : $($secretAlert.title). Detected in: $($secretAlert.physicalLocations[-1].filePath)$commitInfo."
+                    $secretAlerts++
+
+                    Write-Host "##[error] Fix or dismiss this $($secretAlert.alertType) alert in the Advanced Security UI."
+                    $urlAlert = "https://dev.azure.com/{0}/{1}/_git/{2}/alerts/{3}" -f $orgName, $project, $repositoryId, $secretAlert.alertId
+                    Write-Host "##[error] Details for this alert: $($urlAlert)"
+                    AddPRComment $secretAlert $urlAlert
+                }
+                else {
+                    Write-Host "##[warning] Ignored by policy - $($secretAlert.confidence) confidence $($secretAlert.alertType) alert detected #$($secretAlert.alertId) : $($secretAlert.title) in PR commits."
+                }
+            }
+        }
+    }
+    else {
+        Write-Host "##[warning] No commits found in PR #$prId. Skipping secret alert validation against PR commits."
+    }
+}
+
+# Final check - exit with error if any alerts were found (code, dependency, or secrets)
+if ($dependencyAlerts + $codeAlerts + $secretAlerts -gt 0) {
+    Write-Host
+    Write-Host "##[error] Dismiss or fix failing alerts listed (dependency #: $dependencyAlerts / code #: $codeAlerts / secret #: $secretAlerts) and try re-queue the CIVerify task."
+    exit 1 #TODO - dynamically pass/fail the build only if a PR comment was added, indicating that there are new alerts that were directly created by this PR.  Since we do incremental PR iteration based comments this is not currently viable.
+}
 else {
-    Write-Output "No new alerts - all is fine"
+    Write-Output "No alert policy violations found - all is fine"
     exit 0
 }
