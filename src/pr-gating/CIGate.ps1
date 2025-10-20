@@ -47,7 +47,7 @@ function IsSecretInPRCommits($secretAlert, $prCommits) {
         if ($_.versionControl.commitHash) {
             $_.versionControl.commitHash
         }
-    } | Select-Object -Unique
+    } | Where-Object { $_ } | Select-Object -Unique
 
     # Get all commit hashes from the PR
     $prCommitHashes = $prCommits | Select-Object -ExpandProperty commitId
