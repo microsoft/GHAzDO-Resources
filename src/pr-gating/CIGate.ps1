@@ -142,13 +142,13 @@ function AddPRComment($prAlert, $urlAlert) {
         }
 
         $alertTitle = "#$($prAlert.alertId) $($prAlert.title)"
-        if ($prAlert.alertType -eq "secret" -and $prAlert.tools -and $prAlert.tools[0].rules -and $prAlert.tools[0].rules[0].opaqueId) {
-            $confidenceColor = $severityColors[$prAlert.confidence.ToLower()]
+        if ($prAlert.alertType -eq "secret" -and ($prAlert.tools?[0].rules?[0].opaqueId ?? $false)) {
+            $confidenceColor = $severityColors[$prAlert.confidence?.ToLower()]
             if (-not $confidenceColor) { $confidenceColor = "#6c757d" }  # Default gray
             $alertTitle = "$alertTitle ($($prAlert.tools[0].rules[0].opaqueId)) <span style='background-color: $confidenceColor; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: bold;'>$($prAlert.confidence.ToUpper())</span>"
         }
         else {
-            $severityColor = $severityColors[$prAlert.severity.ToLower()]
+            $severityColor = $severityColors[$prAlert.severity?.ToLower()]
             if (-not $severityColor) { $severityColor = "#6c757d" }  # Default gray
             $alertTitle = "$alertTitle <span style='background-color: $severityColor; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: bold;'>$($prAlert.severity.ToUpper())</span>"
         }
