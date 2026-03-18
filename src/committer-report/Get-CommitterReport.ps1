@@ -7,18 +7,51 @@
 
 .DESCRIPTION
     Enumerates all Azure DevOps organizations for the signed-in user, then for each
-    org queries the Advanced Security meter usage estimate API to identify active
-    committers. Produces:
+    org queries two org-level APIs:
+      - meterUsageEstimate: committers who would be billed if AdvSec were enabled on
+        remaining repos (repos where AdvSec is currently OFF)
+      - meterusage: committers who are currently consuming a GHAzDO license
+    Produces:
       - A distinct committer count across all orgs
       - A distinct committer count per org
-      - A detailed list of committers with their org memberships and GHAzDO license status
+      - A detailed list of all committers with their org memberships and a boolean
+        indicating whether they are currently consuming a GHAzDO license
+
+.PARAMETER CsvPath
+    Optional. Path to export the committer report as a CSV file.
+    If not specified, results are displayed in the console only.
+
+.EXAMPLE
+    .\Get-CommitterReport.ps1
+    Displays the committer report in the console.
+
+.EXAMPLE
+    .\Get-CommitterReport.ps1 -CsvPath .\committer-report.csv
+    Displays the report and exports it to a CSV file.
 
 .NOTES
     Prerequisites:
       1. Install the Azure CLI   - https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
       2. Install the extension   - az extension add --name azure-devops
-      3. Sign in                 - az login
+      3. Sign in                 - az login --tenant <tenant_id> --allow-no-subscriptions
+
+
+    ex:
+    az devops logout
+    az logout
+    az login --tenant <tenant_id> --allow-no-subscriptions
+
 #>
+
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$CsvPath
+)
+
+# -------------------------------------------------------------------
+# Configuration
+# -------------------------------------------------------------------
+$ApiTimeoutSec = 60
 
 # -------------------------------------------------------------------
 # Prerequisites (uncomment and run once if not already set up)
@@ -37,7 +70,10 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+$accountInfo = $account | ConvertFrom-Json
+$tenantId = $accountInfo.tenantId
 Write-Host "Logged in successfully." -ForegroundColor Green
+Write-Host "Tenant ID: $tenantId" -ForegroundColor Green
 
 # -------------------------------------------------------------------
 # Step 2 - Acquire an access token for Azure DevOps
@@ -91,65 +127,104 @@ Write-Host "`nFound $($orgs.count) organization(s):`n" -ForegroundColor Green
 $orgs.value | Select-Object accountName, accountUri | Format-Table -AutoSize
 
 # -------------------------------------------------------------------
-# Step 6 - For each org, get estimated committers via org-level API
+# Step 6 - For each org, get estimated + actual committers via org-level APIs
 # -------------------------------------------------------------------
 
-# Hashtable keyed by committer identity — tracks orgs
+# Hashtable keyed by committer identity — tracks orgs and license status
 $committerMap = @{}
+
+# Helper to merge users into the committer map
+function Add-CommittersToMap {
+    param($Users, $OrgName, $IsLicensed, $Plan)
+
+    foreach ($user in $Users) {
+        $upn = $user.userIdentity.uniqueName
+        if ([string]::IsNullOrWhiteSpace($upn)) { $upn = $user.userIdentity.displayName }
+        if ([string]::IsNullOrWhiteSpace($upn)) { continue }
+
+        if (-not $committerMap.ContainsKey($upn)) {
+            $committerMap[$upn] = [PSCustomObject]@{
+                DisplayName       = $user.userIdentity.displayName
+                UserPrincipalName = $user.userIdentity.uniqueName
+                Orgs              = [System.Collections.Generic.HashSet[string]]::new()
+                GHAzDOLicensed    = $false
+                OrgPlans          = @{}  # org name -> HashSet of plan labels
+            }
+        }
+
+        $committerMap[$upn].Orgs.Add($OrgName) | Out-Null
+        if ($IsLicensed) {
+            $committerMap[$upn].GHAzDOLicensed = $true
+            if ($Plan) {
+                if (-not $committerMap[$upn].OrgPlans.ContainsKey($OrgName)) {
+                    $committerMap[$upn].OrgPlans[$OrgName] = [System.Collections.Generic.HashSet[string]]::new()
+                }
+                $committerMap[$upn].OrgPlans[$OrgName].Add($Plan) | Out-Null
+            }
+        }
+    }
+}
 
 foreach ($org in $orgs.value) {
     $orgName = $org.accountName
     Write-Host "Processing org: $orgName ..." -ForegroundColor Cyan
 
-    # Org-level meter usage estimate — all projects/repos in one call
+    # 6a - Org-level meter usage estimate (committers for repos where AdvSec is OFF)
     try {
         $estimateUrl = "https://advsec.dev.azure.com/$orgName/_apis/management/meterUsageEstimate/default?plan=all&api-version=7.2-preview.3"
-        $estimate = Invoke-RestMethod -Uri $estimateUrl -Headers $headers -Method Get -TimeoutSec 30
+        $estimate = Invoke-RestMethod -Uri $estimateUrl -Headers $headers -Method Get -TimeoutSec $ApiTimeoutSec
 
-        # Merge committers from both Code Security and Secret Protection plans
-        $allBilledUsers = @()
+        $csEstUsers = @()
+        $spEstUsers = @()
         if ($estimate.codeSecurityMeterUsageEstimate.billedUsers) {
-            $allBilledUsers += $estimate.codeSecurityMeterUsageEstimate.billedUsers
+            $csEstUsers = $estimate.codeSecurityMeterUsageEstimate.billedUsers
         }
         if ($estimate.secretProtectionMeterUsageEstimate.billedUsers) {
-            $allBilledUsers += $estimate.secretProtectionMeterUsageEstimate.billedUsers
+            $spEstUsers = $estimate.secretProtectionMeterUsageEstimate.billedUsers
         }
 
-        if ($allBilledUsers.Count -gt 0) {
-            # Deduplicate within the org by cuid
-            $seenCuids = @{}
-            $uniqueUsers = @()
-            foreach ($u in $allBilledUsers) {
-                if (-not $seenCuids.ContainsKey($u.cuid)) {
-                    $seenCuids[$u.cuid] = $true
-                    $uniqueUsers += $u
-                }
-            }
+        # Deduplicate for count display
+        $allCuids = @{}
+        ($csEstUsers + $spEstUsers) | ForEach-Object { $allCuids[$_.cuid] = $_ }
 
-            Write-Host "  Estimated committers: $($uniqueUsers.Count)" -ForegroundColor Green
-
-            foreach ($user in $uniqueUsers) {
-                $upn = $user.userIdentity.uniqueName
-                if ([string]::IsNullOrWhiteSpace($upn)) { $upn = $user.userIdentity.displayName }
-                if ([string]::IsNullOrWhiteSpace($upn)) { continue }
-
-                if (-not $committerMap.ContainsKey($upn)) {
-                    $committerMap[$upn] = [PSCustomObject]@{
-                        DisplayName       = $user.userIdentity.displayName
-                        UserPrincipalName = $user.userIdentity.uniqueName
-                        Orgs              = [System.Collections.Generic.HashSet[string]]::new()
-                    }
-                }
-
-                $committerMap[$upn].Orgs.Add($orgName) | Out-Null
-            }
-        }
-        else {
-            Write-Host "  Estimated committers: 0" -ForegroundColor DarkGray
-        }
+        Write-Host "  Estimated (AdvSec OFF repos): $($allCuids.Count)" -ForegroundColor DarkGray
+        Add-CommittersToMap -Users $csEstUsers -OrgName $orgName -IsLicensed $false -Plan 'CodeSecurity'
+        Add-CommittersToMap -Users $spEstUsers -OrgName $orgName -IsLicensed $false -Plan 'SecretProtection'
     }
     catch {
-        Write-Warning "  Skipping org '$orgName' — unable to query: $($_.Exception.Message)"
+        Write-Warning "  Estimate API skipped for '$orgName': $($_.Exception.Message)"
+    }
+
+    # 6b - Org-level actual meter usage per plan (committers currently consuming a license)
+    # NOTE: The API does not expose whether an org uses a bundled (AdvancedSecurity) or
+    # unbundled (separate CodeSecurity / SecretProtection) billing model. For bundled
+    # orgs the API simply duplicates the same committers into both plan responses.
+    # We report each plan's enabled state and committer count as-is without inferring
+    # the billing model.
+    foreach ($plan in @('codeSecurity', 'secretProtection')) {
+        $planLabel = if ($plan -eq 'codeSecurity') { 'CodeSecurity' } else { 'SecretProtection' }
+        try {
+            $usageUrl = "https://advsec.dev.azure.com/$orgName/_apis/management/meterusage/default?plan=$plan&api-version=7.2-preview.3"
+            $usage = Invoke-RestMethod -Uri $usageUrl -Headers $headers -Method Get -TimeoutSec $ApiTimeoutSec
+
+            $isPlanEnabled = $usage.isPlanEnabled
+
+            $billedUsers = @()
+            if ($usage.billedUsers.billedUsers) {
+                $billedUsers = $usage.billedUsers.billedUsers
+            }
+
+            if ($isPlanEnabled) {
+                Write-Host "  Licensed ($planLabel):$((' ' * (20 - $planLabel.Length)))$($billedUsers.Count)" -ForegroundColor Green
+                Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan $planLabel
+            }
+            else {
+                Write-Host "  $planLabel plan not enabled" -ForegroundColor DarkGray
+            }
+        }
+        catch {
+            Write-Host "  $planLabel meter usage unavailable: $($_.Exception.Message)" -ForegroundColor DarkGray
+        }
     }
 }
 
@@ -186,7 +261,29 @@ $orgCounts.GetEnumerator() | Sort-Object Name | ForEach-Object {
 # -------------------------------------------------------------------
 Write-Host "`n--- Committer Details ---" -ForegroundColor Yellow
 
-$allCommitters |
+$report = $allCommitters |
     Sort-Object DisplayName |
-    Select-Object DisplayName, UserPrincipalName, @{N='Organizations';E={$_.Orgs -join ', '}} |
-    Format-Table -AutoSize -Wrap
+    Select-Object DisplayName, UserPrincipalName, GHAzDOLicensed, @{N='Plans';E={
+        # Compute the effective plan per org, then deduplicate across orgs
+        $effectivePlans = [System.Collections.Generic.HashSet[string]]::new()
+        foreach ($orgEntry in $_.OrgPlans.GetEnumerator()) {
+            $orgPlanSet = $orgEntry.Value
+            if ($orgPlanSet.Contains('CodeSecurity') -and $orgPlanSet.Contains('SecretProtection')) {
+                $effectivePlans.Add('AdvancedSecurity') | Out-Null
+            }
+            else {
+                foreach ($p in $orgPlanSet) { $effectivePlans.Add($p) | Out-Null }
+            }
+        }
+        ($effectivePlans | Sort-Object) -join ', '
+    }}, @{N='Organizations';E={$_.Orgs -join ', '}}
+
+$report | Format-Table -Property DisplayName, GHAzDOLicensed, Plans, Organizations -AutoSize -Wrap
+
+# -------------------------------------------------------------------
+# Step 10 - Export to CSV if requested
+# -------------------------------------------------------------------
+if ($CsvPath) {
+    $report | Export-Csv -Path $CsvPath -NoTypeInformation -Encoding UTF8
+    Write-Host "CSV exported to: $CsvPath" -ForegroundColor Green
+}

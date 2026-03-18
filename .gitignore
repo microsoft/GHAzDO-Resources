@@ -95,3 +95,6 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.txz
+
+# Committer report
+src/committer-report/committer-report*.csv
