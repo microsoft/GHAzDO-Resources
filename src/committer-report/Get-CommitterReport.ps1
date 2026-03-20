@@ -197,7 +197,11 @@ foreach ($org in $orgs.value) {
 
         # Deduplicate for count display
         $allCuids = @{}
-        ($csEstUsers + $spEstUsers) | ForEach-Object { $allCuids[$_.cuid] = $_ }
+        ($csEstUsers + $spEstUsers) | ForEach-Object {
+            if (-not [string]::IsNullOrWhiteSpace($_.cuid)) {
+                $allCuids[$_.cuid] = $_
+            }
+        }
 
         Write-Host "  Estimated (AdvSec OFF repos): $($allCuids.Count)" -ForegroundColor DarkGray
         Add-CommittersToMap -Users $csEstUsers -OrgName $orgName -IsLicensed $false -Plan 'CodeSecurity'
@@ -239,15 +243,20 @@ foreach ($org in $orgs.value) {
         }
     }
     catch {
-        # plan=all rejected — determine why
+        # plan=all rejected — determine why using HTTP status code
+        $statusCode = $null
+        if ($_.Exception.Response) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
         $errorMsg = $_.Exception.Message
-        if ($errorMsg -match '404') {
+
+        if ($statusCode -eq 404) {
             # 404 on plan=all: In all observed cases, bundled orgs return 404 when no
             # plan has been purchased, while unbundled orgs return 400 "Invalid plan: All"
             # regardless of purchase state. So we treat 404 as bundled (no plan purchased).
             Write-Host "  Billing model: Bundled (AdvancedSecurity) — no plan purchased [plan=all → 404]" -ForegroundColor DarkGray
         }
-        elseif ($errorMsg -match 'Invalid plan|400') {
+        elseif ($statusCode -eq 400) {
             # 400 "Invalid plan: All" = org is unbundled, query each plan separately
             $unbundledResults = @{}
             foreach ($plan in @('codeSecurity', 'secretProtection')) {
@@ -258,12 +267,13 @@ foreach ($org in $orgs.value) {
                     $unbundledResults[$planLabel] = @{ Success = $true; Usage = $usage }
                 }
                 catch {
-                    $unbundledResults[$planLabel] = @{ Success = $false; Error = $_.Exception.Message }
+                    $perPlanStatus = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { $null }
+                    $unbundledResults[$planLabel] = @{ Success = $false; StatusCode = $perPlanStatus; Error = $_.Exception.Message }
                 }
             }
 
             # If both plans returned 404, neither is purchased — show a single message
-            $allNotPurchased = ($unbundledResults.Values | Where-Object { -not $_.Success -and $_.Error -match '404' }).Count -eq 2
+            $allNotPurchased = ($unbundledResults.Values | Where-Object { -not $_.Success -and $_.StatusCode -eq 404 }).Count -eq 2
             if ($allNotPurchased) {
                 Write-Host "  Billing model: Unbundled (CodeSecurity + SecretProtection) — no plans purchased [plan=all → 400]" -ForegroundColor DarkGray
             }
@@ -286,7 +296,7 @@ foreach ($org in $orgs.value) {
                         }
                     }
                     else {
-                        if ($result.Error -match '404') {
+                        if ($result.StatusCode -eq 404) {
                             Write-Host "  $planLabel not purchased" -ForegroundColor DarkGray
                         }
                         else {
@@ -297,7 +307,7 @@ foreach ($org in $orgs.value) {
             }
         }
         else {
-            Write-Host "  Meter usage unavailable: $errorMsg" -ForegroundColor DarkGray
+            Write-Host "  Meter usage unavailable ($statusCode): $errorMsg" -ForegroundColor DarkGray
         }
     }
 }
@@ -346,18 +356,24 @@ Write-Host "`n--- Committer Details ---" -ForegroundColor Yellow
 $report = $allCommitters |
     Sort-Object DisplayName |
     Select-Object DisplayName, UserPrincipalName, GHAzDOLicensed, @{N='Plans';E={
-        # Compute the effective plan per org, then deduplicate across orgs
-        $effectivePlans = [System.Collections.Generic.HashSet[string]]::new()
-        foreach ($orgEntry in $_.OrgPlans.GetEnumerator()) {
-            $orgPlanSet = $orgEntry.Value
-            if ($orgPlanSet.Contains('CodeSecurity') -and $orgPlanSet.Contains('SecretProtection')) {
-                $effectivePlans.Add('AdvancedSecurity') | Out-Null
-            }
-            else {
-                foreach ($p in $orgPlanSet) { $effectivePlans.Add($p) | Out-Null }
-            }
+        # If not licensed, no plan data is relevant
+        if (-not $_.GHAzDOLicensed -or -not $_.OrgPlans -or $_.OrgPlans.Count -eq 0) {
+            'N/A'
         }
-        ($effectivePlans | Sort-Object) -join ', '
+        else {
+            # Compute the effective plan per org, then deduplicate across orgs
+            $effectivePlans = [System.Collections.Generic.HashSet[string]]::new()
+            foreach ($orgEntry in $_.OrgPlans.GetEnumerator()) {
+                $orgPlanSet = $orgEntry.Value
+                if ($orgPlanSet.Contains('CodeSecurity') -and $orgPlanSet.Contains('SecretProtection')) {
+                    $effectivePlans.Add('AdvancedSecurity') | Out-Null
+                }
+                else {
+                    foreach ($p in $orgPlanSet) { $effectivePlans.Add($p) | Out-Null }
+                }
+            }
+            ($effectivePlans | Sort-Object) -join ', '
+        }
     }}, @{N='Organizations';E={$_.Orgs -join ', '}}
 
 if (-not $CsvPath) {
