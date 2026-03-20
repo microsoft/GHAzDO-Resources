@@ -46,10 +46,10 @@ The report includes the following columns:
 
 ## Limitations
 
-**Bundled vs. unbundled plan detection:** The Azure DevOps Advanced Security APIs do not expose whether an organization uses a bundled (`AdvancedSecurity`) or unbundled (separate `CodeSecurity` / `SecretProtection`) billing model. For bundled orgs, the API simply duplicates the same committers into both the `codeSecurity` and `secretProtection` plan responses. This means:
+**Bundled vs. unbundled plan detection:** The Azure DevOps Advanced Security APIs do not expose a documented, supported way to tell whether an organization uses a bundled (`AdvancedSecurity`) or unbundled (separate `CodeSecurity` / `SecretProtection`) billing model. For bundled orgs, the API simply duplicates the same committers into both the `codeSecurity` and `secretProtection` plan responses. This means:
 
 - A bundled org with both plans active looks **identical** to an unbundled org with both plans active
-- The script reports `AdvancedSecurity` whenever both plans return data for an org, regardless of the actual billing model
-- There is no API field or endpoint to determine the true billing model
+- The script reports an **effective** `AdvancedSecurity` plan whenever both per-plan responses contain users for an org, regardless of the actual billing SKU or billing model
+- There is no reliable, documented API field or endpoint that definitively reports the true billing model
 
-If a committer spans multiple orgs with different billing configurations, the **Plans** column will list the distinct effective plans across all their orgs (e.g., `AdvancedSecurity, CodeSecurity`).
+The script also prints a `Billing model: Bundled/Unbundled` line based on an **undocumented heuristic** that inspects `plan=all` behavior. This is a best-effort guess only, may be incorrect, and may stop working if the underlying API behavior changes. The **Plans** column in the report continues to reflect an *effective plan* view (for example, `AdvancedSecurity` when both plan responses contain users), and **must not** be interpreted as an authoritative billing SKU from Azure DevOps billing systems.
