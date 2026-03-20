@@ -49,7 +49,7 @@ param(
 # -------------------------------------------------------------------
 # Configuration
 # -------------------------------------------------------------------
-$ApiTimeoutSec = 60
+$ApiTimeoutSec = 120
 
 # -------------------------------------------------------------------
 # Prerequisites (uncomment and run once if not already set up)
@@ -143,6 +143,9 @@ $orgs.value | Select-Object accountName, accountUri | Format-Table -AutoSize
 # Hashtable keyed by cuid (stable unique ID across Azure subscriptions) — tracks orgs and license status
 $committerMap = @{}
 
+# Track orgs where API calls failed (partial data)
+$partialDataOrgs = [System.Collections.Generic.List[string]]::new()
+
 # Helper to merge users into the committer map
 function Add-CommittersToMap {
     param($Users, $OrgName, $IsLicensed, $Plan)
@@ -201,7 +204,9 @@ foreach ($org in $orgs.value) {
         Add-CommittersToMap -Users $spEstUsers -OrgName $orgName -IsLicensed $false -Plan 'SecretProtection'
     }
     catch {
-        Write-Warning "  Estimate API skipped for '$orgName': $($_.Exception.Message)"
+        Write-Warning "  Estimate API failed for '$orgName': $($_.Exception.Message)"
+        Write-Warning "  Estimated committers for '$orgName' will be missing from the report."
+        $partialDataOrgs.Add($orgName) | Out-Null
     }
 
     # 6b - Org-level actual meter usage per plan (committers currently consuming a license)
@@ -308,6 +313,14 @@ Write-Host " COMMITTER REPORT SUMMARY" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Yellow
 Write-Host "Total distinct committers across all orgs: $totalDistinct" -ForegroundColor Green
 
+if ($partialDataOrgs.Count -gt 0) {
+    Write-Host "`n⚠️  WARNING: Data is PARTIAL for the following org(s) due to API errors:" -ForegroundColor Red
+    foreach ($po in $partialDataOrgs) {
+        Write-Host "    - $po" -ForegroundColor Red
+    }
+    Write-Host "  Estimated (unlicensed) committers from these orgs may be missing from the report." -ForegroundColor Red
+}
+
 # -------------------------------------------------------------------
 # Step 8 - Report: Distinct count per org
 # -------------------------------------------------------------------
@@ -347,7 +360,9 @@ $report = $allCommitters |
         ($effectivePlans | Sort-Object) -join ', '
     }}, @{N='Organizations';E={$_.Orgs -join ', '}}
 
-$report | Format-Table -Property DisplayName, GHAzDOLicensed, Plans, Organizations -AutoSize -Wrap
+if (-not $CsvPath) {
+    $report | Format-Table -Property DisplayName, GHAzDOLicensed, Plans, Organizations -AutoSize -Wrap
+}
 
 # -------------------------------------------------------------------
 # Step 10 - Export to CSV if requested
@@ -364,4 +379,8 @@ if ($CsvPath) {
     }
     $sanitizedReport | Export-Csv -Path $CsvPath -NoTypeInformation -Encoding UTF8
     Write-Host "CSV exported to: $CsvPath" -ForegroundColor Green
+}
+else {
+    Write-Host "`nTip: Use -CsvPath to export the report to a file, e.g.:" -ForegroundColor DarkGray
+    Write-Host "  .\Get-CommitterReport.ps1 -CsvPath .\committer-report.csv" -ForegroundColor DarkGray
 }
