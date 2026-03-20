@@ -224,7 +224,7 @@ foreach ($org in $orgs.value) {
             $billedUsers = $allUsage.billedUsers.billedUsers
         }
 
-        Write-Host "  Billing model: Bundled (AdvancedSecurity)" -ForegroundColor Cyan
+        Write-Host "  Billing model: Bundled (AdvancedSecurity) [plan=all → 200]" -ForegroundColor Cyan
         if ($allUsage.isPlanEnabled) {
             Write-Host "  Licensed (AdvancedSecurity): $($billedUsers.Count)" -ForegroundColor Green
             Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan 'AdvancedSecurity'
@@ -234,31 +234,60 @@ foreach ($org in $orgs.value) {
         }
     }
     catch {
-        # plan=all rejected — org is unbundled, query each plan separately
+        # plan=all rejected — determine why
         $errorMsg = $_.Exception.Message
-        if ($errorMsg -match 'Invalid plan|400') {
-            Write-Host "  Billing model: Unbundled (CodeSecurity + SecretProtection)" -ForegroundColor Cyan
+        if ($errorMsg -match '404') {
+            # 404 on plan=all: In all observed cases, bundled orgs return 404 when no
+            # plan has been purchased, while unbundled orgs return 400 "Invalid plan: All"
+            # regardless of purchase state. So we treat 404 as bundled (no plan purchased).
+            Write-Host "  Billing model: Bundled (AdvancedSecurity) — no plan purchased [plan=all → 404]" -ForegroundColor DarkGray
+        }
+        elseif ($errorMsg -match 'Invalid plan|400') {
+            # 400 "Invalid plan: All" = org is unbundled, query each plan separately
+            $unbundledResults = @{}
             foreach ($plan in @('codeSecurity', 'secretProtection')) {
                 $planLabel = if ($plan -eq 'codeSecurity') { 'CodeSecurity' } else { 'SecretProtection' }
                 try {
                     $usageUrl = "https://advsec.dev.azure.com/$orgName/_apis/management/meterusage/default?plan=$plan&api-version=7.2-preview.3"
                     $usage = Invoke-RestMethod -Uri $usageUrl -Headers $headers -Method Get -TimeoutSec $ApiTimeoutSec
-
-                    $billedUsers = @()
-                    if ($usage.billedUsers.billedUsers) {
-                        $billedUsers = $usage.billedUsers.billedUsers
-                    }
-
-                    if ($usage.isPlanEnabled) {
-                        Write-Host "  Licensed ($planLabel):$((' ' * (20 - $planLabel.Length)))$($billedUsers.Count)" -ForegroundColor Green
-                        Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan $planLabel
-                    }
-                    else {
-                        Write-Host "  $planLabel plan not enabled" -ForegroundColor DarkGray
-                    }
+                    $unbundledResults[$planLabel] = @{ Success = $true; Usage = $usage }
                 }
                 catch {
-                    Write-Host "  $planLabel meter usage unavailable: $($_.Exception.Message)" -ForegroundColor DarkGray
+                    $unbundledResults[$planLabel] = @{ Success = $false; Error = $_.Exception.Message }
+                }
+            }
+
+            # If both plans returned 404, neither is purchased — show a single message
+            $allNotPurchased = ($unbundledResults.Values | Where-Object { -not $_.Success -and $_.Error -match '404' }).Count -eq 2
+            if ($allNotPurchased) {
+                Write-Host "  Billing model: Unbundled (CodeSecurity + SecretProtection) — no plans purchased [plan=all → 400]" -ForegroundColor DarkGray
+            }
+            else {
+                Write-Host "  Billing model: Unbundled (CodeSecurity + SecretProtection) [plan=all → 400]" -ForegroundColor Cyan
+                foreach ($planLabel in @('CodeSecurity', 'SecretProtection')) {
+                    $result = $unbundledResults[$planLabel]
+                    if ($result.Success) {
+                        $billedUsers = @()
+                        if ($result.Usage.billedUsers.billedUsers) {
+                            $billedUsers = $result.Usage.billedUsers.billedUsers
+                        }
+
+                        if ($result.Usage.isPlanEnabled) {
+                            Write-Host "  Licensed ($planLabel):$((' ' * (20 - $planLabel.Length)))$($billedUsers.Count)" -ForegroundColor Green
+                            Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan $planLabel
+                        }
+                        else {
+                            Write-Host "  $planLabel plan not enabled" -ForegroundColor DarkGray
+                        }
+                    }
+                    else {
+                        if ($result.Error -match '404') {
+                            Write-Host "  $planLabel not purchased" -ForegroundColor DarkGray
+                        }
+                        else {
+                            Write-Host "  $planLabel meter usage unavailable: $($result.Error)" -ForegroundColor DarkGray
+                        }
+                    }
                 }
             }
         }
