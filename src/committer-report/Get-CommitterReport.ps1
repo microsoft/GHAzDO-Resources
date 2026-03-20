@@ -284,6 +284,15 @@ $report | Format-Table -Property DisplayName, GHAzDOLicensed, Plans, Organizatio
 # Step 10 - Export to CSV if requested
 # -------------------------------------------------------------------
 if ($CsvPath) {
-    $report | Export-Csv -Path $CsvPath -NoTypeInformation -Encoding UTF8
+    $sanitizedReport = $report | ForEach-Object {
+        $sanitizedRow = $_.PSObject.Copy()
+        foreach ($property in $sanitizedRow.PSObject.Properties) {
+            if ($property.Value -is [string] -and $property.Value -match '^[=+\-@]') {
+                $property.Value = "'$($property.Value)"
+            }
+        }
+        $sanitizedRow
+    }
+    $sanitizedReport | Export-Csv -Path $CsvPath -NoTypeInformation -Encoding UTF8
     Write-Host "CSV exported to: $CsvPath" -ForegroundColor Green
 }
