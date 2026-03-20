@@ -13,11 +13,7 @@ Generates a committer report for GitHub Advanced Security for Azure DevOps (GHAz
 ## Prerequisites
 
 1. Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
-2. Install the Azure DevOps extension:
-   ```powershell
-   az extension add --name azure-devops
-   ```
-3. Sign in to the tenant that contains your Azure DevOps organizations:
+2. Sign in to the tenant that contains your Azure DevOps organizations:
    ```powershell
    az login --tenant <tenant_id> --allow-no-subscriptions
    ```

@@ -32,12 +32,10 @@
 .NOTES
     Prerequisites:
       1. Install the Azure CLI   - https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
-      2. Install the extension   - az extension add --name azure-devops
-      3. Sign in                 - az login --tenant <tenant_id> --allow-no-subscriptions
+      2. Sign in                 - az login --tenant <tenant_id> --allow-no-subscriptions
 
 
     ex:
-    az devops logout
     az logout
     az login --tenant <tenant_id> --allow-no-subscriptions
 
@@ -56,7 +54,6 @@ $ApiTimeoutSec = 60
 # -------------------------------------------------------------------
 # Prerequisites (uncomment and run once if not already set up)
 # -------------------------------------------------------------------
-# az extension add --name azure-devops
 # az login
 
 # -------------------------------------------------------------------
@@ -64,7 +61,7 @@ $ApiTimeoutSec = 60
 # -------------------------------------------------------------------
 Write-Host "Checking Azure CLI login status..." -ForegroundColor Cyan
 
-$account = az account show 2>&1
+$account = az account show --output json 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Error "You are not logged in to Azure CLI. Please run 'az login' first."
     exit 1
@@ -81,7 +78,7 @@ Write-Host "Tenant ID: $tenantId" -ForegroundColor Green
 Write-Host "Acquiring access token for Azure DevOps..." -ForegroundColor Cyan
 
 $adoResource = "499b84ac-1321-427f-aa17-267ca6975798"
-$tokenJson = az account get-access-token --resource $adoResource 2>&1
+$tokenJson = az account get-access-token --resource $adoResource --output json 2>&1
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to acquire access token. Response: $tokenJson"
@@ -97,7 +94,14 @@ Write-Host "Access token acquired." -ForegroundColor Green
 # -------------------------------------------------------------------
 Write-Host "Retrieving Azure DevOps profile..." -ForegroundColor Cyan
 
-$profile = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1" -Headers $headers -Method Get
+try {
+    $profile = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1" -Headers $headers -Method Get
+}
+catch {
+    Write-Error "Failed to retrieve Azure DevOps profile. Verify your token has the required scopes. Error: $($_.Exception.Message)"
+    exit 1
+}
+
 $memberId = $profile.id
 
 if ([string]::IsNullOrWhiteSpace($memberId)) {
@@ -112,8 +116,14 @@ Write-Host "Member ID: $memberId" -ForegroundColor Green
 # -------------------------------------------------------------------
 Write-Host "Fetching Azure DevOps organizations..." -ForegroundColor Cyan
 
-$url = "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$memberId&api-version=7.1"
-$orgs = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+try {
+    $url = "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$memberId&api-version=7.1"
+    $orgs = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+}
+catch {
+    Write-Error "Failed to fetch Azure DevOps organizations. Error: $($_.Exception.Message)"
+    exit 1
+}
 
 # -------------------------------------------------------------------
 # Step 5 - Display organizations
@@ -130,7 +140,7 @@ $orgs.value | Select-Object accountName, accountUri | Format-Table -AutoSize
 # Step 6 - For each org, get estimated + actual committers via org-level APIs
 # -------------------------------------------------------------------
 
-# Hashtable keyed by committer identity — tracks orgs and license status
+# Hashtable keyed by cuid (stable unique ID across Azure subscriptions) — tracks orgs and license status
 $committerMap = @{}
 
 # Helper to merge users into the committer map
@@ -138,12 +148,11 @@ function Add-CommittersToMap {
     param($Users, $OrgName, $IsLicensed, $Plan)
 
     foreach ($user in $Users) {
-        $upn = $user.userIdentity.uniqueName
-        if ([string]::IsNullOrWhiteSpace($upn)) { $upn = $user.userIdentity.displayName }
-        if ([string]::IsNullOrWhiteSpace($upn)) { continue }
+        $key = $user.cuid
+        if ([string]::IsNullOrWhiteSpace($key)) { continue }
 
-        if (-not $committerMap.ContainsKey($upn)) {
-            $committerMap[$upn] = [PSCustomObject]@{
+        if (-not $committerMap.ContainsKey($key)) {
+            $committerMap[$key] = [PSCustomObject]@{
                 DisplayName       = $user.userIdentity.displayName
                 UserPrincipalName = $user.userIdentity.uniqueName
                 Orgs              = [System.Collections.Generic.HashSet[string]]::new()
@@ -152,14 +161,14 @@ function Add-CommittersToMap {
             }
         }
 
-        $committerMap[$upn].Orgs.Add($OrgName) | Out-Null
+        $committerMap[$key].Orgs.Add($OrgName) | Out-Null
         if ($IsLicensed) {
-            $committerMap[$upn].GHAzDOLicensed = $true
+            $committerMap[$key].GHAzDOLicensed = $true
             if ($Plan) {
-                if (-not $committerMap[$upn].OrgPlans.ContainsKey($OrgName)) {
-                    $committerMap[$upn].OrgPlans[$OrgName] = [System.Collections.Generic.HashSet[string]]::new()
+                if (-not $committerMap[$key].OrgPlans.ContainsKey($OrgName)) {
+                    $committerMap[$key].OrgPlans[$OrgName] = [System.Collections.Generic.HashSet[string]]::new()
                 }
-                $committerMap[$upn].OrgPlans[$OrgName].Add($Plan) | Out-Null
+                $committerMap[$key].OrgPlans[$OrgName].Add($Plan) | Out-Null
             }
         }
     }
@@ -196,34 +205,65 @@ foreach ($org in $orgs.value) {
     }
 
     # 6b - Org-level actual meter usage per plan (committers currently consuming a license)
-    # NOTE: The API does not expose whether an org uses a bundled (AdvancedSecurity) or
-    # unbundled (separate CodeSecurity / SecretProtection) billing model. For bundled
-    # orgs the API simply duplicates the same committers into both plan responses.
-    # We report each plan's enabled state and committer count as-is without inferring
-    # the billing model.
-    foreach ($plan in @('codeSecurity', 'secretProtection')) {
-        $planLabel = if ($plan -eq 'codeSecurity') { 'CodeSecurity' } else { 'SecretProtection' }
-        try {
-            $usageUrl = "https://advsec.dev.azure.com/$orgName/_apis/management/meterusage/default?plan=$plan&api-version=7.2-preview.3"
-            $usage = Invoke-RestMethod -Uri $usageUrl -Headers $headers -Method Get -TimeoutSec $ApiTimeoutSec
+    # ⚠️ WARNING: UNDOCUMENTED BEHAVIOR — FRAGILE DETECTION ⚠️
+    # The billing model (bundled vs unbundled) is not exposed by any documented API field.
+    # This detection relies on an undocumented behavioral difference found by trial and error:
+    #   - Bundled orgs accept plan=all on the meter usage API and return a unified response.
+    #   - Unbundled orgs reject plan=all with a 400 "Invalid plan: All" error.
+    # This behavior is not guaranteed by Microsoft and may change without notice.
+    # If this detection breaks, fall back to querying each plan separately and remove
+    # the bundled/unbundled distinction from the output.
+    $isBundled = $false
+    try {
+        $allUrl = "https://advsec.dev.azure.com/$orgName/_apis/management/meterusage/default?plan=all&api-version=7.2-preview.3"
+        $allUsage = Invoke-RestMethod -Uri $allUrl -Headers $headers -Method Get -TimeoutSec $ApiTimeoutSec
+        $isBundled = $true
 
-            $isPlanEnabled = $usage.isPlanEnabled
+        $billedUsers = @()
+        if ($allUsage.billedUsers.billedUsers) {
+            $billedUsers = $allUsage.billedUsers.billedUsers
+        }
 
-            $billedUsers = @()
-            if ($usage.billedUsers.billedUsers) {
-                $billedUsers = $usage.billedUsers.billedUsers
-            }
+        Write-Host "  Billing model: Bundled (AdvancedSecurity)" -ForegroundColor Cyan
+        if ($allUsage.isPlanEnabled) {
+            Write-Host "  Licensed (AdvancedSecurity): $($billedUsers.Count)" -ForegroundColor Green
+            Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan 'AdvancedSecurity'
+        }
+        else {
+            Write-Host "  AdvancedSecurity plan not enabled" -ForegroundColor DarkGray
+        }
+    }
+    catch {
+        # plan=all rejected — org is unbundled, query each plan separately
+        $errorMsg = $_.Exception.Message
+        if ($errorMsg -match 'Invalid plan|400') {
+            Write-Host "  Billing model: Unbundled (CodeSecurity + SecretProtection)" -ForegroundColor Cyan
+            foreach ($plan in @('codeSecurity', 'secretProtection')) {
+                $planLabel = if ($plan -eq 'codeSecurity') { 'CodeSecurity' } else { 'SecretProtection' }
+                try {
+                    $usageUrl = "https://advsec.dev.azure.com/$orgName/_apis/management/meterusage/default?plan=$plan&api-version=7.2-preview.3"
+                    $usage = Invoke-RestMethod -Uri $usageUrl -Headers $headers -Method Get -TimeoutSec $ApiTimeoutSec
 
-            if ($isPlanEnabled) {
-                Write-Host "  Licensed ($planLabel):$((' ' * (20 - $planLabel.Length)))$($billedUsers.Count)" -ForegroundColor Green
-                Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan $planLabel
-            }
-            else {
-                Write-Host "  $planLabel plan not enabled" -ForegroundColor DarkGray
+                    $billedUsers = @()
+                    if ($usage.billedUsers.billedUsers) {
+                        $billedUsers = $usage.billedUsers.billedUsers
+                    }
+
+                    if ($usage.isPlanEnabled) {
+                        Write-Host "  Licensed ($planLabel):$((' ' * (20 - $planLabel.Length)))$($billedUsers.Count)" -ForegroundColor Green
+                        Add-CommittersToMap -Users $billedUsers -OrgName $orgName -IsLicensed $true -Plan $planLabel
+                    }
+                    else {
+                        Write-Host "  $planLabel plan not enabled" -ForegroundColor DarkGray
+                    }
+                }
+                catch {
+                    Write-Host "  $planLabel meter usage unavailable: $($_.Exception.Message)" -ForegroundColor DarkGray
+                }
             }
         }
-        catch {
-            Write-Host "  $planLabel meter usage unavailable: $($_.Exception.Message)" -ForegroundColor DarkGray
+        else {
+            Write-Host "  Meter usage unavailable: $errorMsg" -ForegroundColor DarkGray
         }
     }
 }
