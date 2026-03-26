@@ -8,7 +8,7 @@ The first thing you need to do is to install the dependencies that the task need
 
 ```bash
 cd src/extensions/codeql-autosetup/buildandreleasetask
-npm install --production
+npm install
 ```
 
 Then you have to compile the task, to get the `.js` file:
