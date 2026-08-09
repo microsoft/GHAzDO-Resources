@@ -1,0 +1,53 @@
+{
+  "alertId": 703,
+  "severity": "medium",
+  "title": "Express.js Open Redirect in malformed URLs (CVE-2024-29041)",
+  "tools": [
+    {
+      "name": "Advanced Security Dependency Scanning",
+      "rules": [
+        {
+          "opaqueId": "DEP1001_GHSA-rv95-896h-c2vc",
+          "friendlyName": "GHSA-rv95-896h-c2vc",
+          "description": "'package-lock.json' contains a reference to an insecure Npm package 'express 4.17.1'.  Recommendation: Upgrade express from 4.17.1 to 4.19.2 to fix the vulnerability.",
+          "resources": "https://github.com/advisories/GHSA-rv95-896h-c2vc",
+          "helpMessage": "### Impact\n\nVersions of Express.js prior to 4.19.2 and pre-release alpha and beta versions before 5.0.0-beta.3 are affected by an open redirect vulnerability using malformed URLs.\n\nWhen a user of Express performs a redirect using a user-provided URL Express performs an encode [using `encodeurl`](https://github.com/pillarjs/encodeurl) on the contents before passing it to the `location` header. This can cause malformed URLs to be evaluated in unexpected ways by common redirect allow list implementations in Express applications, leading to an Open Redirect via bypass of a properly implemented allow list.\n\nThe main method impacted is `res.location()` but this is also called from within `res.redirect()`.\n\n### Patches\n\nhttps://github.com/expressjs/express/commit/0867302ddbde0e9463d0564fea5861feb708c2dd\nhttps://github.com/expressjs/express/commit/0b746953c4bd8e377123527db11f9cd866e39f94\n\nAn initial fix went out with `express@4.19.0`, we then patched a feature regression in `4.19.1` and added improved handling for the bypass in `4.19.2`.\n\n### Workarounds\n\nThe fix for this involves pre-parsing the url string with either `require('node:url').parse` or `new URL`. These are steps you can take on your own before passing the user input string to `res.location` or `res.redirect`.\n\n### References\n\nhttps://github.com/expressjs/express/pull/5539\nhttps://github.com/koajs/koa/issues/1800\nhttps://expressjs.com/en/4x/api.html#res.location",
+          "tags": null,
+          "additionalProperties": {
+            "cveId": "CVE-2024-29041",
+            "advisoryId": "GHSA-rv95-896h-c2vc"
+          }
+        }
+      ]
+    }
+  ],
+  "dismissal": null,
+  "repositoryUrl": "https://dev.azure.com/octodemo-felickz/6a81438c-b480-4b66-8261-2ce43b3446d5/_git/bc659709-06b1-4e1c-9818-fdfcc2c67c29",
+  "gitRef": "refs/heads/main",
+  "alertType": "dependency",
+  "firstSeenDate": "2024-03-25T21:05:33.5105374Z",
+  "lastSeenDate": "2024-03-27T19:10:00.1319191Z",
+  "fixedDate": null,
+  "introducedDate": "2024-03-25T21:04:29Z",
+  "state": "active",
+  "physicalLocations": [
+    {
+      "versionControl": {
+        "commitHash": "04a1b68fb8589a4e73ae90f40add13e50add2f05",
+        "itemUrl": "https://dev.azure.com:443/octodemo-felickz/6a81438c-b480-4b66-8261-2ce43b3446d5/_git/bc659709-06b1-4e1c-9818-fdfcc2c67c29?path=%2Fpackage-lock.json&version=GC04a1b68fb8589a4e73ae90f40add13e50add2f05&lineStyle=plain"
+      },
+      "filePath": "s/package-lock.json",
+      "region": null
+    }
+  ],
+  "logicalLocations": [
+    {
+      "fullyQualifiedName": "Npm express 4.17.1",
+      "kind": "rootDependency"
+    },
+    {
+      "fullyQualifiedName": "Npm express 4.17.1",
+      "kind": "vulnerableDependency"
+    }
+  ]
+}
