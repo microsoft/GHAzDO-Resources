@@ -1,4 +1,6 @@
-# Support
+# Support$ git remote -v
+> origin  https://github.com/YOUR-USERNAME/YOUR-FORK.git (fetch)
+> origin  https://github.com/YOUR-USERNAME/YOUR-FORK.git (push)
 
 ## How to file issues and get help  
 
