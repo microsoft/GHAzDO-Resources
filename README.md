@@ -6,6 +6,10 @@ This project is a series of scripts and other resources for demonstrating and ac
 Security for Azure DevOps. These scripts are primarily for demonstration purposes, and should not be construed as part of
 the GHAS on ADO product.
 
+## Resources
+
+- [Export GHAzDO alerts to Nucleus using FlexConnect](./src/nucleus/README.md)
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a

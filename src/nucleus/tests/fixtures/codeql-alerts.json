@@ -1,0 +1,54 @@
+{
+  "count": 2,
+  "value": [
+    {
+      "alertId": 101,
+      "alertType": "code",
+      "state": "active",
+      "title": "SQL query built from user-controlled sources",
+      "severity": "high",
+      "firstSeenDate": "2026-08-01T13:20:00Z",
+      "lastSeenDate": "2026-08-10T13:20:00Z",
+      "gitRef": "refs/heads/main",
+      "repositoryUrl": "https://dev.azure.com/contoso/security/_git/payments",
+      "tools": [
+        {
+          "name": "CodeQL",
+          "rules": [
+            {
+              "opaqueId": "cs/sql-injection",
+              "friendlyName": "SQL injection",
+              "description": "Building SQL from untrusted input may allow injection.",
+              "helpMessage": "Use parameterized queries.",
+              "tags": [
+                "external/cwe/cwe-089"
+              ]
+            }
+          ]
+        }
+      ],
+      "physicalLocations": [
+        {
+          "filePath": "src/Database.cs",
+          "region": {
+            "lineStart": 42
+          },
+          "versionControl": {
+            "commitHash": "abcdef1234567890"
+          }
+        }
+      ],
+      "logicalLocations": []
+    },
+    {
+      "alertId": 102,
+      "alertType": "code",
+      "state": "dismissed",
+      "title": "Dismissed test alert",
+      "severity": "medium",
+      "tools": [],
+      "physicalLocations": [],
+      "logicalLocations": []
+    }
+  ]
+}

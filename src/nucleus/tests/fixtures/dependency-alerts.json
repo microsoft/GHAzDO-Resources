@@ -1,0 +1,55 @@
+{
+  "count": 1,
+  "value": [
+    {
+      "alertId": 201,
+      "alertType": "dependency",
+      "state": "active",
+      "title": "Vulnerable Newtonsoft.Json package",
+      "severity": "critical",
+      "firstSeenDate": "2026-08-02T10:00:00Z",
+      "lastSeenDate": "2026-08-10T10:00:00Z",
+      "gitRef": "refs/heads/main",
+      "repositoryUrl": "https://dev.azure.com/contoso/security/_git/payments",
+      "tools": [
+        {
+          "name": "GitHub Advanced Security dependency scanning",
+          "rules": [
+            {
+              "opaqueId": "GHSA-5crp-9r3c-p9vr",
+              "friendlyName": "Improper handling of metadata",
+              "description": "A vulnerable package version is installed.",
+              "helpMessage": "Upgrade to a non-vulnerable package version.",
+              "additionalProperties": {
+                "identifiers": [
+                  "CVE-2024-21907"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "physicalLocations": [
+        {
+          "filePath": "src/App/packages.lock.json",
+          "region": {
+            "lineStart": 15
+          },
+          "versionControl": {
+            "commitHash": "1234567890abcdef"
+          }
+        }
+      ],
+      "logicalLocations": [
+        {
+          "kind": "rootDependency",
+          "fullyQualifiedName": "nuget Example.App 1.0.0"
+        },
+        {
+          "kind": "component",
+          "fullyQualifiedName": "nuget Newtonsoft.Json 12.0.1"
+        }
+      ]
+    }
+  ]
+}
