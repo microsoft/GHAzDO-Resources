@@ -2,16 +2,64 @@
 
 This integration exports GitHub Advanced Security for Azure DevOps (GHAzDO)
 alerts to a Nucleus project. It provides a file-based approximation of the
-native Nucleus GitHub Advanced Security connector:
+native Nucleus GitHub Advanced Security connector.
 
-```text
-GHAzDO scanning and alert processing
-  -> Azure DevOps Advanced Security Alerts API
-  -> FlexConnect JSON
-  -> Nucleus scan upload API
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Pipeline["Azure Pipelines"]
+        Restore["Restore dependencies"]
+        SCA["GHAzDO dependency scanning"]
+        CodeQL["GHAzDO CodeQL analysis"]
+        ThirdParty["Optional third-party scanner"]
+        Publish["AdvancedSecurity-Publish@1"]
+        ExportTask["PowerShell export task"]
+
+        Restore --> SCA
+        Restore --> CodeQL
+        ThirdParty -. "SARIF" .-> Publish
+        SCA --> ExportTask
+        CodeQL --> ExportTask
+        Publish -. "Optional" .-> ExportTask
+    end
+
+    subgraph GHAzDO["Azure DevOps Advanced Security"]
+        Processing["Alert processing"]
+        AlertsAPI["Alerts REST API"]
+        Processing --> AlertsAPI
+    end
+
+    subgraph Integration["PowerShell integration"]
+        Exporter["Invoke-GHAzDONucleus.ps1"]
+        Mapping["GHAzDO to FlexConnect mapping"]
+        ScanFile["FlexConnect JSON scan"]
+        Exporter --> Mapping --> ScanFile
+    end
+
+    subgraph Nucleus["Nucleus"]
+        UploadAPI["Project scan upload API"]
+        Ingestion["FlexConnect ingestion"]
+        Findings["Application assets and findings"]
+        UploadAPI --> Ingestion --> Findings
+    end
+
+    SCA --> Processing
+    CodeQL --> Processing
+    Publish --> Processing
+    ExportTask --> Exporter
+    Exporter -- "Paginated GET" --> AlertsAPI
+    AlertsAPI -- "Active alerts" --> Exporter
+    ScanFile --> UploadAPI
 ```
 
-It supports active:
+The scanner tasks publish results to GHAzDO first. The exporter does not parse
+CodeQL output, dependency manifests, or SARIF directly. It reads normalized
+alerts from the GHAzDO Alerts API, waits for a stable active snapshot, maps that
+snapshot to a Nucleus FlexConnect scan, and uploads the scan as one bulk
+ingestion payload.
+
+The integration supports active:
 
 - Code alerts from CodeQL and normalized third-party SARIF publishers
 - Dependency/SCA alerts
