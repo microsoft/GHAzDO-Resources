@@ -1,0 +1,48 @@
+{
+  "count": 1,
+  "value": [
+    {
+      "alertId": 401,
+      "alertType": "code",
+      "state": "active",
+      "title": "Public storage container",
+      "severity": "warning",
+      "firstSeenDate": "2026-08-04T09:00:00Z",
+      "lastSeenDate": "2026-08-10T09:00:00Z",
+      "gitRef": "refs/heads/main",
+      "repositoryUrl": "https://dev.azure.com/contoso/security/_git/payments",
+      "tools": [
+        {
+          "name": "ThirdPartyIaC",
+          "rules": [
+            {
+              "opaqueId": "iac/public-storage",
+              "friendlyName": "Public storage",
+              "description": "The infrastructure definition permits public access.",
+              "helpMessage": "Disable anonymous public access.",
+              "tags": [
+                "security",
+                "CWE-284"
+              ],
+              "additionalProperties": {
+                "category": "iac"
+              }
+            }
+          ]
+        }
+      ],
+      "physicalLocations": [
+        {
+          "filePath": "infra/storage.bicep",
+          "region": {
+            "lineStart": 12
+          },
+          "versionControl": {
+            "commitHash": "0011223344556677"
+          }
+        }
+      ],
+      "logicalLocations": []
+    }
+  ]
+}

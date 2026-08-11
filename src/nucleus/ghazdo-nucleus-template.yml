@@ -1,0 +1,53 @@
+# Basic .NET example for scanning one Azure Repos Git repository and uploading
+# the resulting active GHAzDO alert snapshot to Nucleus.
+steps:
+  - task: AdvancedSecurity-Codeql-Init@1
+    displayName: Initialize CodeQL
+    condition: and(succeeded(), ne(variables['RunNucleusIngestion'], 'false'))
+    inputs:
+      languages: csharp
+      buildtype: None
+
+  - task: NuGetAuthenticate@1
+    displayName: Authenticate NuGet feeds
+    condition: and(succeeded(), ne(variables['RunNucleusIngestion'], 'false'))
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore .NET dependencies
+    condition: and(succeeded(), ne(variables['RunNucleusIngestion'], 'false'))
+    inputs:
+      command: restore
+      projects: '**/*.sln'
+
+  # Dependency scanning has no WaitForProcessing input. Running it before
+  # CodeQL analysis gives the service additional processing time.
+  - task: AdvancedSecurity-Dependency-Scanning@1
+    displayName: Run dependency scanning
+    condition: and(succeeded(), ne(variables['RunNucleusIngestion'], 'false'))
+
+  - task: AdvancedSecurity-Codeql-Analyze@1
+    displayName: Run CodeQL analysis
+    condition: and(succeeded(), ne(variables['RunNucleusIngestion'], 'false'))
+    inputs:
+      WaitForProcessing: true
+      WaitForProcessingInterval: 5
+      WaitForProcessingTimeout: 300
+
+  - task: PowerShell@2
+    displayName: Upload GHAzDO alerts to Nucleus
+    condition: and(succeeded(), ne(variables['RunNucleusIngestion'], 'false'))
+    inputs:
+      targetType: filePath
+      filePath: src/nucleus/Invoke-GHAzDONucleus.ps1
+      pwsh: true
+      arguments: >-
+        -WaitTimeoutSeconds 180
+        -WaitIntervalSeconds 15
+        -StableIterations 2
+        -PageSize 1000
+        -PublishArtifact
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      NUCLEUS_BASE_URL: $(nucleus-base-url)
+      NUCLEUS_PROJECT_ID: $(nucleus-project-id)
+      NUCLEUS_API_KEY: $(nucleus-api-key)
